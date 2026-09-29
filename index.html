@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>SCAPE° — Klimasimulationsspiel</title>
+<meta name="description" content="Das Klimasimulationsspiel von SCAPE°: neun Menschen spielen gemeinsam ein Klimamodell. Anleitung, Computermodell, Spielleitung und Auswertung in einer App." />
+<meta name="theme-color" content="#f2e2c0" />
+<script>
+  (function () {
+    var mode;
+    try {
+      var stored = localStorage.getItem("scapeViewMode");
+      mode = (stored === "mobile" || stored === "desktop") ? stored : null;
+    } catch (e) {}
+    if (!mode) {
+      mode = window.matchMedia("(max-width: 699px)").matches ? "mobile" : "desktop";
+    }
+    document.documentElement.setAttribute("data-view", mode);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111111;
+    --paper:#ffffff;
+    --muted:#5c5c5c;
+
+    /* SCAPE° palette, sampled from the corporate identity guide */
+    --olive:#6b6b23;
+    --mustard:#d2a716;
+    --orange:#ef8f2c;
+    --rust:#c65a2a;
+    --red:#df2a1e;
+    --purple:#4a2e83;
+    --green:#00954f;
+    --cyan:#1093c4;
+    --navy:#28348f;
+
+    --cream:#f2e2c0;
+    --pastel-yellow:#f6ea79;
+    --bright-yellow:#ffe400;
+    --pastel-blue:#cfe6f6;
+    --pastel-lavender:#dcd6f2;
+    --mint:#4ab48a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  }
+  h1,h2,h3{font-family:inherit;}
+  img,svg{max-width:100%;}
+  [hidden]{ display:none !important; }
+
+  .wrap{ max-width:600px; margin:0 auto; }
+
+  /* ============ WORDMARK / TOPBAR ============ */
+  .topbar{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    padding:22px 20px 14px;
+  }
+  .wordmark .word{
+    display:block; font-size:26px; font-weight:800; letter-spacing:-.01em; line-height:1;
+  }
+  .wordmark .sub{
+    display:block; margin-top:4px; font-size:10px; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  #view-toggle{
+    border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:9.5px; letter-spacing:.05em;
+    text-transform:uppercase; padding:5px 8px; cursor:pointer; white-space:nowrap;
+  }
+  #view-toggle:active{ background:var(--ink); color:var(--paper); }
+
+  /* ============ POSTER HERO ============ */
+  .poster{
+    margin:0 20px 16px;
+    position:relative;
+    aspect-ratio:2.2/1;
+    overflow:hidden;
+  }
+  .poster-grid{
+    position:absolute; inset:0;
+    display:grid;
+    grid-template-columns:repeat(10,1fr);
+    grid-template-rows:1fr 1fr;
+  }
+  .q-a{ grid-column:1/6; grid-row:1/2; background:var(--rust); }
+  .q-b{ grid-column:6/11; grid-row:1/2; background:var(--pastel-yellow); }
+  .q-c{ grid-column:1/8; grid-row:2/3; background:var(--pastel-blue); }
+  .q-d{ grid-column:8/11; grid-row:2/3; background:var(--navy); }
+  /* Sized to stay inside the yellow block, where black ink reads. */
+  .arch{
+    position:absolute; right:5%; top:6%;
+    width:22%;
+    color:var(--ink);
+  }
+  .arch svg{ display:block; width:100%; height:auto; }
+  .poster-copy{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:0 18px 16px;
+    max-width:74%;
+  }
+  .poster-title{
+    margin:0 0 6px; font-weight:900; text-transform:uppercase;
+    font-size:clamp(20px,7vw,30px); line-height:.98; letter-spacing:-.01em;
+  }
+  .poster-tagline{
+    margin:0; font-size:10px; font-weight:700; letter-spacing:.02em;
+    line-height:1.35; text-transform:uppercase;
+  }
+
+  /* ============ TABS ============ */
+  .tabs{
+    position:sticky; top:0; z-index:20;
+    display:flex; gap:6px;
+    padding:10px 20px; background:var(--paper);
+    border-bottom:2px solid var(--ink);
+  }
+  .tab-btn{
+    flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.03em; padding:9px 2px; cursor:pointer; text-align:center; line-height:1.15;
+  }
+  .tab-btn.active{ background:var(--ink); color:var(--paper); }
+
+  main{ padding:20px 20px 30px; }
+
+  /* ============ SECTION LABELS ============ */
+  .section-label{
+    font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    margin:26px 0 12px;
+  }
+  .section-label.first{ margin-top:0; }
+  .section-label.with-tools{
+    display:flex; align-items:center; gap:8px; justify-content:space-between;
+  }
+
+  /* ============ TEXT ============ */
+  details.topic{ border-top:2px solid var(--ink); }
+  details.topic:last-of-type{ border-bottom:2px solid var(--ink); }
+  details.topic > summary{
+    list-style:none; cursor:pointer;
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    padding:14px 0;
+    font-size:14px; font-weight:800; letter-spacing:-.01em;
+  }
+  details.topic > summary::-webkit-details-marker{ display:none; }
+  details.topic > summary::after{
+    content:"+";
+    flex:none; width:22px; height:22px;
+    border:2px solid var(--ink); border-radius:50%;
+    font-size:14px; font-weight:800; line-height:18px; text-align:center;
+  }
+  details.topic[open] > summary::after{ content:"\2013"; background:var(--ink); color:var(--paper); }
+  details.topic > summary:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+  .topic-body{ padding:0 0 10px; }
+  .topic-body h3{ margin:20px 0 8px; font-size:14px; font-weight:800; letter-spacing:.02em; }
+  p.blurb, .topic-body li{
+    margin:0 0 14px; font-size:14.5px; line-height:1.6; color:var(--ink);
+  }
+  .topic-body ol, .topic-body ul{ padding-left:20px; margin:0 0 14px; }
+  .topic-body li{ margin-bottom:8px; }
+  .intro-blurb{ margin:0 0 20px; }
+  .intro-blurb p.blurb{ margin-bottom:0; }
+  .note{ font-size:12.5px; line-height:1.5; margin:0 0 12px; }
+
+  .figure{
+    border:2px solid var(--ink); background:var(--cream);
+    padding:12px 12px 8px; margin:0 0 14px;
+  }
+  .figure svg{ display:block; width:100%; height:auto; }
+  .figure figcaption{ margin-top:8px; font-size:11px; font-weight:600; line-height:1.45; }
+  .figure figcaption b{ font-weight:800; }
+
+  /* "How to use the app" cards on the instructions page */
+  .howto{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 22px; }
+  .howto button{
+    text-align:left; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; padding:11px 11px 12px; cursor:pointer;
+  }
+  .howto button b{ display:block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
+  .howto button span{ display:block; font-size:11.5px; line-height:1.4; }
+  .howto button:nth-child(1){ background:var(--pastel-yellow); }
+  .howto button:nth-child(2){ background:var(--pastel-blue); }
+  .howto button:nth-child(3){ background:var(--cream); }
+  .howto button:nth-child(4){ background:var(--pastel-lavender); }
+
+  /* ============ SEGMENTED CONTROLS ============ */
+  .seg-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .seg-btn{
+    flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:12px; text-transform:uppercase;
+    letter-spacing:.03em; padding:10px 6px; cursor:pointer; text-align:center;
+  }
+  .seg-btn.active{ background:var(--ink); color:var(--paper); }
+  .seg-btn.warm.active{ background:var(--red); border-color:var(--red); color:#fff; }
+  .seg-btn:disabled{ opacity:.4; cursor:default; }
+  .seg-btn .sub{
+    display:block; font-size:9px; font-weight:600; text-transform:none;
+    letter-spacing:0; opacity:.75; margin-top:2px;
+  }
+  .row-label{
+    font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin:0 0 6px;
+  }
+
+  /* ============ STAGE (the 3x3 field) ============ */
+  .stage-card{
+    margin:0 0 12px;
+    border:2px solid var(--ink);
+    background:var(--cream);
+  }
+  canvas.field{ display:block; width:100%; aspect-ratio:4/3; }
+  .phase-caption{
+    border-top:2px solid var(--ink); background:var(--paper);
+    padding:9px 12px; font-size:12.5px; line-height:1.45; min-height:3.2em;
+  }
+  .phase-caption b{ font-weight:800; }
+
+  /* ============ READOUT ============ */
+  .readout{
+    display:flex; gap:10px; flex-wrap:nowrap;
+    margin-bottom:14px; padding:12px 0; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
+  }
+  .readout div{
+    flex:1 1 0; min-width:0;
+    font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    line-height:1.25;
+  }
+  .readout b{ display:block; font-size:15px; font-weight:800; letter-spacing:0; margin-top:3px; text-transform:none; }
+
+  /* ============ SLIDER ============ */
+  .slider-row{ margin-bottom:14px; }
+  .slider-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .slider-head b{ font-size:14px; letter-spacing:0; }
+  input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:22px; background:transparent; cursor:pointer; margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{ height:6px; background:var(--paper); border:2px solid var(--ink); }
+  input[type=range]::-moz-range-track{ height:6px; background:var(--paper); border:2px solid var(--ink); }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; margin-top:-10px;
+    background:var(--bright-yellow); border:2px solid var(--ink);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:0;
+    background:var(--bright-yellow); border:2px solid var(--ink);
+  }
+
+  /* ============ BUTTONS ============ */
+  .btn-row{ display:flex; gap:10px; margin-bottom:10px; }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    flex:1; min-width:0;
+    font-family:inherit; font-weight:800; font-size:13.5px; text-transform:uppercase; letter-spacing:.02em;
+    padding:14px 8px; cursor:pointer;
+    border:2px solid var(--ink);
+    background:var(--paper); color:var(--ink);
+  }
+  .btn.primary{ background:var(--bright-yellow); flex:1.5; }
+  .btn svg{ width:18px; height:18px; flex:none; }
+  .btn:disabled{ opacity:.4; cursor:default; }
+  .btn .sub{
+    display:block; font-size:10.5px; font-weight:600; text-transform:none; letter-spacing:0; opacity:.75; margin-top:1px;
+  }
+  .btn-row.small .btn{ font-size:10.5px; padding:10px 4px; }
+  .ghost-btn, .mini-btn{
+    border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:.05em;
+    text-transform:uppercase; padding:7px 10px; cursor:pointer;
+  }
+  .mini-btn{ font-size:9.5px; padding:4px 7px; }
+  .ghost-btn:disabled{ opacity:.4; cursor:default; }
+
+  /* ============ FORMS ============ */
+  .params{ display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; margin:4px 0 12px; }
+  .param{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; }
+  .param small{ display:block; font-weight:500; font-size:10px; opacity:.75; }
+  input[type=number], input[type=text]{
+    font-family:inherit; font-size:16px; font-weight:700; color:var(--ink);
+    border:2px solid var(--ink); background:var(--paper); padding:7px 8px; width:100%; border-radius:0;
+  }
+  input[type=number]:focus, input[type=text]:focus{ outline:none; background:var(--pastel-yellow); }
+  input.bad{ background:#fbd9d3; }
+  input.changed{ background:var(--pastel-lavender); }
+
+  /* 3x3 input grid, laid out like the players stand */
+  .gin{ border:2px solid var(--ink); margin:0 0 12px; }
+  .gin-row{ display:grid; grid-template-columns:64px 1fr 1fr 1fr; }
+  .gin-row + .gin-row{ border-top:2px solid var(--ink); }
+  .gin-row.r0, .gin-row.r2{ background:var(--pastel-blue); }
+  .gin-row.r1{ background:var(--pastel-yellow); }
+  .gin-lab{
+    display:flex; align-items:center; padding:0 8px;
+    font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  }
+  .gin-cell{ display:flex; flex-direction:column; gap:3px; padding:6px 5px; min-width:0; }
+  .gin-cell small{ font-size:10px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gin-cell input{ padding:6px 5px; text-align:center; }
+  .gin-cell output{
+    display:block; border:2px dashed var(--ink); padding:7px 5px; text-align:center;
+    font-size:16px; font-weight:800; background:rgba(255,255,255,.6);
+  }
+
+  .check{
+    border:2px solid var(--ink); padding:9px 11px; margin:0 0 12px;
+    font-size:12.5px; line-height:1.45; background:var(--paper);
+  }
+  .check.ok{ background:#d7efe3; }
+  .check.bad{ background:#fbd9d3; }
+  .check b{ font-weight:800; }
+
+  /* "Ansage" -- what the game master reads out */
+  .say{ border:2px solid var(--ink); background:var(--pastel-yellow); padding:10px 12px; margin:0 0 12px; }
+  .say-label{ font-size:9.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px; }
+  .say p{ margin:0; font-size:13.5px; line-height:1.5; }
+
+  /* ============ GUIDED ROUND ============ */
+  .round-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    margin:0 0 10px;
+  }
+  .round-head h2{ margin:0; font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:-.01em; }
+  .round-head span{ font-size:11px; font-weight:700; }
+  .stepper{ display:flex; gap:5px; margin:0 0 12px; }
+  .step-chip{
+    flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+    padding:6px 2px; cursor:pointer; text-align:center; line-height:1.2;
+  }
+  .step-chip b{ display:block; font-size:14px; }
+  .step-chip.done{ background:var(--cream); }
+  .step-chip.active{ background:var(--ink); color:var(--paper); }
+  .step-chip:disabled{ opacity:.35; cursor:default; }
+
+  .xcard{ border:2px solid var(--ink); padding:10px 11px; margin:0 0 10px; background:var(--paper); }
+  .xhead{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:7px; }
+  .xhead span{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  .xhead b{ font-size:15px; font-weight:800; }
+  .xnb{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+  .xnb div{ border:2px solid var(--ink); padding:6px 7px; font-size:12px; font-weight:700; background:var(--pastel-blue); }
+  .xnb div.hot{ outline:3px solid var(--rust); outline-offset:-5px; }
+  .xnb small{ display:block; font-weight:600; font-size:11px; margin-top:2px; }
+  .xrule{ font-size:12px; line-height:1.45; margin:0 0 8px; }
+  .amount-row{ display:flex; gap:6px; align-items:stretch; }
+  .amount-row input{ flex:1; text-align:center; min-width:0; }
+  .amount-row button{
+    flex:none; min-width:42px; border:2px solid var(--ink); background:var(--paper);
+    font-family:inherit; font-weight:800; font-size:16px; cursor:pointer;
+  }
+  .amount-row button.rand{ font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:0 8px; background:var(--bright-yellow); }
+  .xwarn{ font-size:11.5px; font-weight:700; color:var(--red); margin-top:6px; min-height:0; }
+  .xwarn:empty{ display:none; }
+
+  /* ============ PROTOCOL ============ */
+  .protocol-wrap{ max-height:320px; overflow:auto; border:2px solid var(--ink); margin:0 0 12px; }
+  table.protocol{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.protocol th{
+    position:sticky; top:0; background:var(--ink); color:var(--paper);
+    font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:6px 5px; text-align:left;
+  }
+  table.protocol td{ padding:6px 5px; border-top:1px solid #d9d4c7; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.protocol td.warm{ color:var(--red); font-weight:800; }
+  table.protocol tr.latest td{ background:var(--pastel-yellow); font-weight:700; }
+
+  /* ============ CHARTS ============ */
+  .chart-grid{ display:grid; grid-template-columns:1fr; gap:0 14px; }
+  .chart-card{ border:2px solid var(--ink); background:var(--paper); padding:10px 10px 8px; margin:0 0 14px; }
+  .chart-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .chart-title{ font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+  .chart-title small{ display:block; font-size:10px; font-weight:600; text-transform:none; letter-spacing:0; margin-top:2px; }
+  canvas.chart{ display:block; width:100%; aspect-ratio:16/10; touch-action:pan-y; }
+  canvas.chart.heat{ aspect-ratio:4/3; }
+  canvas.chart.wide{ aspect-ratio:2/1; }
+  .chart-note{ margin:6px 0 0; font-size:11px; line-height:1.45; font-weight:500; }
+  .legend{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; font-weight:700; margin:0 0 4px; }
+  .legend i{ display:inline-block; width:14px; height:3px; margin-right:5px; vertical-align:middle; }
+  .legend i.band{ height:10px; opacity:.25; }
+  .legend i.dash{ background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px) !important; }
+  .toggle{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; margin:6px 0 0; cursor:pointer; }
+  .toggle input{ width:18px; height:18px; accent-color:var(--ink); }
+  .sm-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .sm-cell{ border:1.5px solid var(--ink); padding:4px 4px 2px; min-width:0; }
+  .sm-cell .sm-title{ font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sm-cell canvas{ display:block; width:100%; aspect-ratio:4/3; touch-action:pan-y; }
+  .empty{
+    border:2px dashed var(--ink); padding:22px 16px; text-align:center; font-size:13px; line-height:1.5; margin:0 0 14px;
+  }
+
+  /* ============ FOOTER ============ */
+  .brand-footer{
+    padding:26px 20px 34px; border-top:2px solid var(--ink);
+    font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; line-height:1.6;
+  }
+
+  /* ============ DESKTOP VIEW ============
+     Base styles above = mobile / vertical phone. Overrides below apply when
+     the viewport is wide (auto-detected) or when the desktop view is picked. */
+  :root[data-view="desktop"] .wrap{ max-width:900px; }
+  :root[data-view="desktop"] .poster{ aspect-ratio:3.2/1; }
+  :root[data-view="desktop"] .arch{ width:14%; }
+  :root[data-view="desktop"] .poster-title{ font-size:clamp(26px,5vw,40px); }
+  :root[data-view="desktop"] .poster-tagline{ font-size:11.5px; }
+  :root[data-view="desktop"] .tab-btn{ font-size:12px; padding:10px 6px; }
+  :root[data-view="desktop"] details.topic > summary{ font-size:16px; }
+  :root[data-view="desktop"] p.blurb,
+  :root[data-view="desktop"] .topic-body li{ font-size:15.5px; }
+  :root[data-view="desktop"] .howto{ grid-template-columns:repeat(4,1fr); }
+  :root[data-view="desktop"] .chart-grid{ grid-template-columns:1fr 1fr; }
+  :root[data-view="desktop"] canvas.chart.wide{ aspect-ratio:2.8/1; }
+  :root[data-view="desktop"] .params{ grid-template-columns:repeat(3,1fr); }
+  :root[data-view="desktop"] .split{ display:grid; grid-template-columns:1.1fr 1fr; gap:0 20px; align-items:start; }
+  :root[data-view="desktop"] .xcards{ display:grid; grid-template-columns:repeat(3,1fr); gap:0 10px; }
+  :root[data-view="desktop"] .btn:hover:not(:disabled),
+  :root[data-view="desktop"] .seg-btn:hover:not(:disabled){ opacity:.85; }
+
+  /* ============ PROJECTOR VIEW ============
+     Only the evaluation, as large as the screen allows. */
+  :root.beamer .topbar, :root.beamer .poster, :root.beamer .tabs,
+  :root.beamer .brand-footer, :root.beamer .no-beamer{ display:none !important; }
+  :root.beamer .wrap{ max-width:none; }
+  :root.beamer main{ padding:18px 28px; }
+  :root.beamer .chart-grid{ grid-template-columns:1fr 1fr; }
+  :root.beamer .chart-title{ font-size:15px; }
+  :root.beamer .readout b{ font-size:22px; }
+  :root.beamer .readout div{ font-size:11px; }
+
+  @media print{
+    .tabs, .topbar, .no-print{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="wordmark">
+      <span class="word">SCAPE°</span>
+      <span class="sub">Wetter, Klima, Mensch</span>
+    </div>
+    <button id="view-toggle" type="button"></button>
+  </header>
+
+  <div class="poster">
+    <div class="poster-grid">
+      <div class="q-a"></div>
+      <div class="q-b"></div>
+      <div class="q-c"></div>
+      <div class="q-d"></div>
+    </div>
+    <div class="arch" aria-hidden="true">
+      <svg viewBox="0 0 300 220">
+        <g fill="currentColor">
+          <circle cx="60" cy="40" r="17"/><circle cx="150" cy="40" r="17"/><circle cx="240" cy="40" r="17"/>
+          <circle cx="60" cy="110" r="17"/><circle cx="150" cy="110" r="17"/><circle cx="240" cy="110" r="17"/>
+          <circle cx="60" cy="180" r="17"/><circle cx="150" cy="180" r="17"/><circle cx="240" cy="180" r="17"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M84,72 L216,72 M204,62 L216,72 L204,82"/>
+          <path d="M216,144 L84,144 M96,134 L84,144 L96,154"/>
+          <path d="M84,212 L216,212 M204,202 L216,212 L204,222"/>
+        </g>
+      </svg>
+    </div>
+    <div class="poster-copy">
+      <h1 class="poster-title">Klima zum Mitspielen</h1>
+      <p class="poster-tagline">Neun Menschen, ein Planet: Wind, Sonne und Treibhauseffekt als Spiel &mdash; und als Modell.</p>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn" data-tab="anleitung">Anleitung</button>
+    <button class="tab-btn" data-tab="modell">Modell</button>
+    <button class="tab-btn" data-tab="spiel">Spiel leiten</button>
+    <button class="tab-btn" data-tab="auswertung">Auswertung</button>
+  </nav>
+
+  <main>
+    <!-- ================= ANLEITUNG ================= -->
+    <section class="view" id="view-anleitung">
+      <div class="intro-blurb">
+        <p class="blurb"><b>Neun Menschen stehen in einem 3&times;3-Raster und sind zusammen ein Planet.</b>
+          Jede Person h&auml;lt eine Zahl &mdash; ihre &bdquo;Temperaturpunkte&ldquo;. Runde f&uuml;r Runde schieben Winde die Reihen weiter, die Tropen geben W&auml;rme an die Hemisph&auml;ren ab, die Sonne heizt und das All k&uuml;hlt. So entsteht aus ein paar einfachen Regeln ein Klimamodell, das man mit dem eigenen K&ouml;rper durchl&auml;uft.</p>
+      </div>
+
+      <div class="section-label first">So hilft dir die App</div>
+      <div class="howto">
+        <button type="button" data-goto="anleitung"><b>Anleitung</b><span>Regeln, Aufstellung und was man daraus lernt &mdash; diese Seite.</span></button>
+        <button type="button" data-goto="modell"><b>Modell</b><span>Der Computer spielt alle neun Rollen. Zum Vorzeigen und Vergleichen.</span></button>
+        <button type="button" data-goto="spiel"><b>Spiel leiten</b><span>F&uuml;hrt dich durch jede Runde, rechnet mit und protokolliert.</span></button>
+        <button type="button" data-goto="auswertung"><b>Auswertung</b><span>Die Diagramme, die eure Gruppe erzeugt hat &mdash; bereit f&uuml;r den Beamer.</span></button>
+      </div>
+
+      <div class="explainer">
+        <details class="topic" open>
+          <summary>Worum geht es?</summary>
+          <div class="topic-body">
+            <p class="blurb">Das Spiel hat zwei Ziele. Erstens erleben die Mitspielenden, <b>wie eine Simulation funktioniert</b>: Ein Modell ist nichts anderes als ein Zustand (hier: neun Zahlen) und feste Regeln, die diesen Zustand Schritt f&uuml;r Schritt fortschreiben. Wetter- und Klimamodelle machen genau das &mdash; nur mit Millionen Gitterpunkten statt neun Menschen.</p>
+            <p class="blurb">Zweitens zeigt es stark vereinfacht, wie <b>die globale Zirkulation</b> W&auml;rme von den Tropen zu den Polen transportiert, wie die Erde <b>Energie mit dem Weltall austauscht</b> und was passiert, wenn der <b>Treibhauseffekt</b> diese Bilanz verschiebt.</p>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Material &amp; Aufstellung</summary>
+          <div class="topic-body">
+            <ul>
+              <li><b>9 Mitspielende und eine Spielleitung.</b> Jede Person bekommt einen Zettel und einen Stift, optional einen Taschenrechner.</li>
+              <li><b>Aufstellung im 3&times;3-Raster.</b> Die obere Reihe ist die Nordhalbkugel, die mittlere die Tropen, die untere die S&uuml;dhalbkugel.</li>
+              <li><b>Startwerte:</b> Alle Personen in Nord und S&uuml;d beginnen mit <b>0</b> Punkten. Die ersten beiden Tropen-Personen w&auml;hlen eine Zahl zwischen <b>25 und 50</b>, die dritte bekommt den Rest bis <b>135</b> (z.&nbsp;B. 40, 34 &rarr; 61). Die App kann die Startwerte auch w&uuml;rfeln.</li>
+            </ul>
+            <figure class="figure">
+              <svg viewBox="0 0 340 240" role="img" aria-label="Neun Personen im 3x3-Raster; Nord- und Südreihe bewegen sich nach rechts, die Tropenreihe nach links">
+                <rect x="78" y="10" width="252" height="70" fill="#cfe6f6"/>
+                <rect x="78" y="80" width="252" height="70" fill="#f6ea79"/>
+                <rect x="78" y="150" width="252" height="70" fill="#cfe6f6"/>
+                <rect x="78" y="10" width="252" height="210" fill="none" stroke="#111" stroke-width="2"/>
+                <line x1="78" y1="80" x2="330" y2="80" stroke="#111" stroke-width="2"/>
+                <line x1="78" y1="150" x2="330" y2="150" stroke="#111" stroke-width="2"/>
+                <g font-family="Archivo,Arial" font-weight="800" font-size="11" fill="#111">
+                  <text x="6" y="44">NORD</text><text x="6" y="114">TROPEN</text><text x="6" y="184">SÜD</text>
+                </g>
+                <g font-family="Archivo,Arial" font-weight="600" font-size="8.5" fill="#111">
+                  <text x="6" y="57">Jetstream</text><text x="6" y="127">Passat</text><text x="6" y="197">Jetstream</text>
+                </g>
+                <g fill="#fff" stroke="#111" stroke-width="2.5">
+                  <circle cx="120" cy="38" r="16"/><circle cx="204" cy="38" r="16"/><circle cx="288" cy="38" r="16"/>
+                  <circle cx="120" cy="108" r="16"/><circle cx="204" cy="108" r="16"/><circle cx="288" cy="108" r="16"/>
+                  <circle cx="120" cy="178" r="16"/><circle cx="204" cy="178" r="16"/><circle cx="288" cy="178" r="16"/>
+                </g>
+                <g font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111" text-anchor="middle">
+                  <text x="120" y="42">0</text><text x="204" y="42">0</text><text x="288" y="42">0</text>
+                  <text x="120" y="112">40</text><text x="204" y="112">34</text><text x="288" y="112">61</text>
+                  <text x="120" y="182">0</text><text x="204" y="182">0</text><text x="288" y="182">0</text>
+                </g>
+                <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M100,68 L308,68 M299,62 L308,68 L299,74" stroke="#28348f"/>
+                  <path d="M308,138 L100,138 M109,132 L100,138 L109,144" stroke="#c65a2a"/>
+                  <path d="M100,208 L308,208 M299,202 L308,208 L299,214" stroke="#28348f"/>
+                </g>
+              </svg>
+              <figcaption><b>Die Aufstellung.</b> Wer am rechten Rand steht und nach rechts muss, l&auml;uft auf den linken Platz &mdash; die Reihen sind wie ein Band um die Erde geschlossen.</figcaption>
+            </figure>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Eine Runde in vier Schritten</summary>
+          <div class="topic-body">
+            <ol>
+              <li><b>Wind.</b> Die Nord- und die S&uuml;dreihe gehen <b>einen Platz nach rechts</b> (die Westwinde der mittleren Breiten, die Jetstreams). Die Tropenreihe geht <b>einen Platz nach links</b> (die Passatwinde). Die Zahlen wandern mit den Menschen.</li>
+              <li><b>W&auml;rmeaustausch.</b> Jede Tropen-Person vergleicht sich mit der Person direkt n&ouml;rdlich und direkt s&uuml;dlich von ihr und w&auml;hlt die Seite mit der <b>gr&ouml;&szlig;eren Differenz</b> (bei Gleichstand frei). Sie gibt eine selbst gew&auml;hlte ganze Zahl zwischen <b>0 und der H&auml;lfte dieser Differenz</b> ab. Das ist der Zufall im Modell &mdash; wie Wirbel und Tiefdruckgebiete, die mal mehr, mal weniger W&auml;rme polw&auml;rts tragen.</li>
+              <li><b>Strahlung.</b> Jede Tropen-Person bekommt <b>+8</b> Punkte von der Sonne. Jede Person in Nord und S&uuml;d verliert <b>&minus;4</b> Punkte ans Weltall.</li>
+              <li><b>Notieren.</b> Die Spielleitung schreibt alle neun Werte auf und berechnet den Mittelwert &mdash; oder tippt sie in die App.</li>
+            </ol>
+            <figure class="figure">
+              <svg viewBox="0 0 340 210" role="img" aria-label="Energiefluss in einer Spalte: Sonne heizt die Tropen, die Tropen geben Wärme an Nord oder Süd ab, Nord und Süd strahlen ins All ab">
+                <g stroke="#111" stroke-width="2">
+                  <rect x="130" y="12" width="80" height="50" fill="#cfe6f6"/>
+                  <rect x="130" y="80" width="80" height="50" fill="#f6ea79"/>
+                  <rect x="130" y="148" width="80" height="50" fill="#cfe6f6"/>
+                </g>
+                <g font-family="Archivo,Arial" font-weight="800" font-size="11" fill="#111" text-anchor="middle">
+                  <text x="170" y="41">NORD</text><text x="170" y="109">TROPEN</text><text x="170" y="177">SÜD</text>
+                </g>
+                <g fill="none" stroke="#c65a2a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M152,80 L152,66 M146,72 L152,65 L158,72"/>
+                  <path d="M188,130 L188,144 M182,138 L188,145 L194,138"/>
+                </g>
+                <text x="218" y="76" font-family="Archivo,Arial" font-weight="700" font-size="9.5" fill="#111">0 … &#189; Differenz</text>
+                <text x="218" y="146" font-family="Archivo,Arial" font-weight="700" font-size="9.5" fill="#111">(oder hierhin)</text>
+                <circle cx="290" cy="105" r="13" fill="#ffe400" stroke="#111" stroke-width="2"/>
+                <path d="M274,105 L216,105 M225,99 L216,105 L225,111" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <text x="245" y="97" font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111" text-anchor="middle">+8</text>
+                <g fill="none" stroke="#28348f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M128,37 C115,31 108,43 95,37 C84,32 78,40 66,37 M75,31 L66,37 L75,43"/>
+                  <path d="M128,173 C115,167 108,179 95,173 C84,168 78,176 66,173 M75,167 L66,173 L75,179"/>
+                </g>
+                <g font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111">
+                  <text x="20" y="41">&minus;4</text><text x="20" y="177">&minus;4</text>
+                </g>
+                <text x="8" y="109" font-family="Archivo,Arial" font-weight="700" font-size="9" fill="#111">ins Weltall</text>
+              </svg>
+              <figcaption><b>Die Energiebilanz einer Runde.</b> Rein kommen 3 &times; 8 = 24 Punkte, raus gehen 6 &times; 4 = 24 Punkte. Der Austausch verschiebt nur Punkte, er erzeugt keine.</figcaption>
+            </figure>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Die Wendung: Treibhauseffekt</summary>
+          <div class="topic-body">
+            <p class="blurb">Irgendwann &mdash; zum Beispiel nach 12 bis 15 Runden, am besten ohne Vorank&uuml;ndigung &mdash; ver&auml;ndert die Spielleitung eine einzige Regel: <b>Die Hemisph&auml;ren verlieren ab jetzt nur noch 3 statt 4 Punkte pro Runde</b> an das Weltall. Mehr Treibhausgase halten W&auml;rme zur&uuml;ck, die sonst abgestrahlt w&uuml;rde.</p>
+            <p class="blurb">Klingt harmlos. Doch die Bilanz kippt: Rein kommen weiter 24 Punkte, raus gehen nur noch 18. Jede Runde bleiben <b>6 Punkte</b> zus&auml;tzlich im System &mdash; die Mitteltemperatur steigt um &frac23; Punkt pro Runde, und zwar in jeder Runde, ohne Ende.</p>
+            <p class="blurb">In der App schaltest du die Wendung unter <b>Spiel leiten</b> mit dem Schalter &bdquo;Treibhaus&ldquo; um. Im Modell stellst du ein, ab welcher Runde sie greift.</p>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Was man beobachten kann</summary>
+          <div class="topic-body">
+            <h3>Wetter ist Zufall, Klima ist Bilanz</h3>
+            <p class="blurb">Die Werte der einzelnen Personen springen wild, weil jede Tropen-Person frei w&auml;hlt, wie viel sie abgibt. Keine Runde gleicht der anderen, kein Spiel dem n&auml;chsten &mdash; das ist <b>Wetter</b>. Der <b>Mittelwert</b> aller neun ist dagegen in jeder Runde exakt vorhersagbar: Er bleibt bei 135 / 9 = <b>15</b>, solange die Energiebilanz ausgeglichen ist. Das ist <b>Klima</b>: Es h&auml;ngt nicht von den einzelnen Entscheidungen ab, sondern nur davon, wie viel Energie herein- und hinausgeht.</p>
+            <h3>Vom Tropenberg zum Gef&auml;lle</h3>
+            <p class="blurb">Am Anfang sitzt alle W&auml;rme in den Tropen. Nach einigen Runden stellt sich ein Gef&auml;lle ein, das ungef&auml;hr stabil bleibt: warme Tropen, k&uuml;hlere Hemisph&auml;ren. Die Winde mischen dabei entlang der Breitenkreise &mdash; ohne sie w&uuml;rde immer dieselbe Tropen-Person mit denselben Nachbarn tauschen.</p>
+            <h3>Ein Modell ohne R&uuml;ckkopplung</h3>
+            <p class="blurb">Nach der Wendung steigt die Temperatur immer weiter. In der echten Welt strahlt eine w&auml;rmere Erde mehr W&auml;rme ab, bis sich ein neues, h&ouml;heres Gleichgewicht einstellt. Diese R&uuml;ckkopplung fehlt hier &mdash; ein guter Einstieg in die Frage, was ein Modell kann und was nicht.</p>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Tipps f&uuml;r die Spielleitung</summary>
+          <div class="topic-body">
+            <ul>
+              <li><b>Einmal Probe laufen.</b> Unter <b>Modell</b> kannst du eine Runde Schritt f&uuml;r Schritt ansehen &mdash; gut zum Erkl&auml;ren am Beamer, bevor alle aufstehen.</li>
+              <li><b>Rundenzahl.</b> Rund 20 bis 25 Runden zeigen den Effekt gut. Eine Runde dauert anfangs zwei bis drei Minuten, sp&auml;ter unter einer.</li>
+              <li><b>Rechnen lassen.</b> Die Tropen-Personen rechnen selbst, die App pr&uuml;ft mit: Im gef&uuml;hrten Modus schl&auml;gt sie Seite und H&ouml;chstmenge vor, der <b>Energie-Check</b> findet Rechenfehler sofort.</li>
+              <li><b>Zwei Eingabearten.</b> <i>Gef&uuml;hrt</i> f&uuml;hrt durch Wind, Austausch und Strahlung und rechnet mit. <i>Nur Endwerte</i> ist schneller, wenn die Gruppe schon sicher ist: Du tippst nur die neun Zahlen am Rundenende ein. Du kannst in jeder Runde wechseln.</li>
+              <li><b>Am Ende:</b> Unter <b>Auswertung</b> die Beamer-Ansicht &ouml;ffnen und der Gruppe ihr eigenes Klima zeigen &mdash; inklusive Vergleich mit 100 Computerl&auml;ufen, die mit denselben Startwerten gespielt wurden.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="topic">
+          <summary>Zum Diskutieren</summary>
+          <div class="topic-body">
+            <ul>
+              <li>Ergibt das Spiel f&uuml;r euch Sinn? Was hat euch &uuml;berrascht?</li>
+              <li>Warum war der Mittelwert so ruhig, obwohl eure Zahlen so gesprungen sind?</li>
+              <li>Ihr habt ein Spiel gespielt, der Computer hundert. Ist euer Spiel &bdquo;richtig&ldquo;? Was sagt ein einzelner Lauf, was sagt ein Ensemble?</li>
+              <li>Was k&ouml;nnte man erg&auml;nzen oder &auml;ndern, ohne es komplizierter zu machen? (Zum Beispiel: mehr Abstrahlung bei h&ouml;herer Temperatur, Eis, das weniger Sonne aufnimmt, oder ein Ozean, der langsam reagiert.)</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <div class="btn-row" style="margin-top:22px">
+        <button class="btn" type="button" data-goto="modell">Modell ansehen</button>
+        <button class="btn primary" type="button" data-goto="spiel">Spiel leiten &rarr;</button>
+      </div>
+    </section>
+
+    <!-- ================= MODELL ================= -->
+    <section class="view" id="view-modell" hidden>
+      <div class="intro-blurb">
+        <p class="blurb"><b>Das Spiel ohne Menschen.</b> Der Computer &uuml;bernimmt alle neun Rollen und w&uuml;rfelt jede Entscheidung. Starte die Animation oder gehe Schritt f&uuml;r Schritt durch eine Runde.</p>
+      </div>
+      <div class="split">
+        <div>
+          <div class="stage-card">
+            <canvas id="model-field" class="field" aria-label="Das Spielfeld des Modells"></canvas>
+            <div class="phase-caption" id="model-caption"></div>
+          </div>
+        </div>
+        <div>
+          <div class="readout">
+            <div>Runde<b id="mo-round">0</b></div>
+            <div>Mittel<b id="mo-mean">—</b></div>
+            <div>Summe<b id="mo-sum">—</b></div>
+            <div>Abstrahlung<b id="mo-warm">—</b></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" id="mo-play" type="button">
+              <svg id="mo-play-icon" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" fill="currentColor"/></svg>
+              <span><span id="mo-play-label">Start</span><span class="sub" id="mo-play-sub">Animation abspielen</span></span>
+            </button>
+            <button class="btn" id="mo-step" type="button">
+              <span><span>Schritt</span><span class="sub">Ein Teilschritt</span></span>
+            </button>
+            <button class="btn" id="mo-end" type="button">
+              <span><span>Ende</span><span class="sub">Durchrechnen</span></span>
+            </button>
+          </div>
+          <div class="slider-row">
+            <div class="slider-head"><span>Tempo</span><b id="mo-speed-label">1&times;</b></div>
+            <input type="range" id="mo-speed" min="0.5" max="4" step="0.5" value="1" />
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="chart-title">Globale Mitteltemperatur<small>Mittel aller neun Positionen</small></span>
+            </div>
+            <canvas id="model-mean" class="chart"></canvas>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="mo-new" type="button">Neuer Lauf</button>
+            <button class="btn" id="mo-results" type="button">Alle Diagramme &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <details class="topic" style="margin-top:14px">
+        <summary>Einstellungen des Modells</summary>
+        <div class="topic-body">
+          <div class="params" id="model-params"></div>
+          <div class="row-label">Gleichstand beim Austausch</div>
+          <div class="seg-row" id="mo-tie">
+            <button class="seg-btn active" type="button" data-tie="random">Zufall<span class="sub">wie im Spiel</span></button>
+            <button class="seg-btn" type="button" data-tie="south">Immer S&uuml;d<span class="sub">wie im Python-Skript</span></button>
+          </div>
+          <div class="params" style="grid-template-columns:1fr auto">
+            <label class="param"><span>Zufallszahl (Seed)<small>Gleicher Seed = gleicher Lauf</small></span><input type="number" id="mo-seed" /></label>
+            <button class="ghost-btn" type="button" id="mo-reseed" style="align-self:end;height:42px">W&uuml;rfeln</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn" type="button" id="mo-defaults">Standard</button>
+            <button class="btn primary" type="button" id="mo-apply">&Uuml;bernehmen &amp; neu starten</button>
+          </div>
+          <p class="note">Die Standardwerte entsprechen dem Python-Skript: Startwerte 25&ndash;50 (Rest bis 135), Sonne +8, Abstrahlung &minus;4, ab Runde 15 &minus;3, 24 Runden.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ================= SPIEL LEITEN ================= -->
+    <section class="view" id="view-spiel" hidden>
+      <div id="live-root"></div>
+      <input type="file" id="import-file" accept="application/json,.json" hidden />
+    </section>
+
+    <!-- ================= AUSWERTUNG ================= -->
+    <section class="view" id="view-auswertung" hidden>
+      <div class="seg-row no-beamer" id="res-source">
+        <button class="seg-btn" type="button" data-source="game">Live-Spiel</button>
+        <button class="seg-btn" type="button" data-source="model">Modelllauf</button>
+      </div>
+      <div class="empty" id="res-empty" hidden></div>
+      <div id="res-body">
+        <div class="section-label first with-tools">
+          <span id="res-label">Auswertung</span>
+          <button class="mini-btn" type="button" id="res-beamer">Beamer-Ansicht</button>
+        </div>
+        <div class="readout">
+          <div>Runden<b id="ro-n">—</b></div>
+          <div>Mittel Start<b id="ro-m0">—</b></div>
+          <div>Mittel Ende<b id="ro-m1">—</b></div>
+          <div>Tropen &minus; Pole<b id="ro-grad">—</b></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="chart-title" id="heat-title">Temperaturfeld<small>Wer hatte wann wie viele Punkte?</small></span>
+              <button class="mini-btn no-beamer" type="button" data-png="res-heat">PNG</button>
+            </div>
+            <canvas id="res-heat" class="chart heat"></canvas>
+            <div class="seg-row" style="margin:8px 0 6px; align-items:center">
+              <button class="ghost-btn" type="button" id="heat-play" style="flex:none">Abspielen</button>
+              <input type="range" id="heat-k" min="0" max="1" step="1" value="0" style="flex:1" aria-label="Runde" />
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="chart-title">Globale Mitteltemperatur<small>Mittel aller neun Positionen</small></span>
+              <button class="mini-btn no-beamer" type="button" data-png="res-mean">PNG</button>
+            </div>
+            <div class="legend" id="leg-mean"></div>
+            <canvas id="res-mean" class="chart"></canvas>
+            <p class="chart-note" id="note-mean"></p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="chart-title">Tropen und Hemisph&auml;ren<small>Mittel jeder Reihe</small></span>
+            <button class="mini-btn no-beamer" type="button" data-png="res-zonal">PNG</button>
+          </div>
+          <div class="legend" id="leg-zonal"></div>
+          <canvas id="res-zonal" class="chart wide"></canvas>
+          <label class="toggle"><input type="checkbox" id="res-ens" /> Mit 100 Modellläufen vergleichen (gleiche Startwerte, gleiche Treibhaus-Runden; Band = mittlere 80&nbsp;%)</label>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="chart-title">Zeitreihen aller Positionen<small id="sm-sub">Jedes K&auml;stchen ist ein Platz im Raster</small></span>
+          </div>
+          <div class="seg-row" id="sm-mode" style="max-width:360px">
+            <button class="seg-btn active" type="button" data-sm="pos">Nach Platz</button>
+            <button class="seg-btn" type="button" data-sm="person">Nach Person</button>
+          </div>
+          <div class="sm-grid" id="res-sm"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="brand-footer">
+    Wetter, Klima, Wandel.<br>Wir erkl&auml;ren es. &mdash; SCAPE°
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ============ SMALL HELPERS ============
+  function $(id) { return document.getElementById(id); }
+  function clone(g) { return g.map(function (r) { return r.slice(); }); }
+  function gridSum(g) { return g[0][0] + g[0][1] + g[0][2] + g[1][0] + g[1][1] + g[1][2] + g[2][0] + g[2][1] + g[2][2]; }
+  function gridMean(g) { return gridSum(g) / 9; }
+  function rowMean(g, i) { return (g[i][0] + g[i][1] + g[i][2]) / 3; }
+  function lerpGrid(a, b, t) {
+    return a.map(function (r, i) { return r.map(function (v, j) { return v + (b[i][j] - v) * t; }); });
+  }
+  function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+  // German number formatting: decimal comma, a real minus sign, and no
+  // trailing zeros, so 15 reads "15" and 15.67 reads "15,67".
+  function fmt(v, d) {
+    if (v == null || !isFinite(v)) return '—';
+    var s = Number(v).toFixed(d == null ? 1 : d);
+    if (s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+    if (s === '-0') s = '0';
+    return s.replace('-', '−').replace('.', ',');
+  }
+  function signed(v) { return (v > 0 ? '+' : '') + fmt(v, 0); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function download(name, text, mime) {
+    var blob = text instanceof Blob ? text : new Blob([text], { type: mime });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  // Seeded random numbers, so a model run can be repeated exactly.
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function randInt(rand, lo, hi) { return lo + Math.floor(rand() * (hi - lo + 1)); }
+  function newSeed() { return Math.floor(Math.random() * 90000) + 10000; }
+
+  // ============ THE MODEL ============
+  // A faithful port of klimasimulationsspiel.py. The grid is three rows --
+  // 0 north, 1 tropics, 2 south -- of three positions each. Values travel
+  // with the people who hold them, exactly like np.roll moves them.
+  var DEFAULT_PARAMS = {
+    rounds: 24,       // num_iterations = 25 in the script, including the start
+    gain: 8,          // sun, per tropics position and round
+    loss: 4,          // radiation to space, per hemisphere position and round
+    lossWarm: 3,      // the same after the greenhouse twist
+    warmRound: 15,    // timestep_globalwarming; 0 = never
+    total: 135,       // the three tropics start values add up to this
+    initMin: 25,
+    initMax: 50,
+    tie: 'random'     // equal difference to both poles: 'random' or 'south'
+  };
+
+  var ROW_NAMES = ['Nord', 'Tropen', 'Süd'];
+  var ROW_LONG = ['Nordhalbkugel', 'Tropen', 'Südhalbkugel'];
+  var DEFAULT_NAMES = ['N1', 'N2', 'N3', 'T1', 'T2', 'T3', 'S1', 'S2', 'S3'];
+
+  function initialGrid(t1, t2, total) { return [[0, 0, 0], [t1, t2, total - t1 - t2], [0, 0, 0]]; }
+
+  // Step 1: jet streams push both hemispheres one place right, the trade
+  // winds push the tropics one place left; the rows wrap around the globe.
+  // Works for values and for player ids alike.
+  function windShift(g) {
+    return [
+      [g[0][2], g[0][0], g[0][1]],
+      [g[1][1], g[1][2], g[1][0]],
+      [g[2][2], g[2][0], g[2][1]]
+    ];
+  }
+
+  // Step 2, the rule for one tropics position: give to the hemisphere with
+  // the larger difference, at most half of it. Nothing flows if neither
+  // neighbour is colder. On a tie `pole` is only a default; `tie` says the
+  // player may choose.
+  function exchangeRule(g, j) {
+    var eq = g[1][j], dN = eq - g[0][j], dS = eq - g[2][j];
+    var d = Math.max(dN, dS);
+    if (d <= 0) return { pole: null, tie: false, dN: dN, dS: dS, max: 0 };
+    return { pole: dN > dS ? 0 : 2, tie: dN === dS, dN: dN, dS: dS, max: Math.floor(d / 2) };
+  }
+  function maxFor(g, j, pole) {
+    var d = g[1][j] - g[pole][j];
+    return d > 0 ? Math.floor(d / 2) : 0;
+  }
+  function applyExchanges(g, ex) {
+    var o = clone(g);
+    ex.forEach(function (e, j) {
+      if (e.pole === null || !e.amount) return;
+      o[1][j] -= e.amount;
+      o[e.pole][j] += e.amount;
+    });
+    return o;
+  }
+
+  // Step 3: sun in, radiation out.
+  function lossOf(p, warm) { return warm ? p.lossWarm : p.loss; }
+  function radiate(g, p, warm) {
+    var o = clone(g), loss = lossOf(p, warm);
+    for (var j = 0; j < 3; j++) { o[1][j] += p.gain; o[0][j] -= loss; o[2][j] -= loss; }
+    return o;
+  }
+  // The exchange only moves points around, so the whole grid's sum changes
+  // by exactly this much per round. That is the game master's energy check.
+  function expectedDelta(p, warm) { return 3 * p.gain - 6 * lossOf(p, warm); }
+
+  function modelRound(prev, p, warm, rand) {
+    var aw = windShift(prev);
+    var ex = [];
+    for (var j = 0; j < 3; j++) {
+      var r = exchangeRule(aw, j);
+      if (r.pole === null) { ex.push({ pole: null, amount: 0 }); continue; }
+      var pole = r.pole;
+      if (r.tie) pole = p.tie === 'south' ? 2 : (rand() < 0.5 ? 0 : 2);
+      ex.push({ pole: pole, amount: randInt(rand, 0, r.max) });
+    }
+    var ae = applyExchanges(aw, ex);
+    return { mode: 'model', warm: warm, afterWind: aw, exchanges: ex, afterExchange: ae, grid: radiate(ae, p, warm) };
+  }
+
+  // warmFlags (optional) replays a given greenhouse schedule round by round,
+  // which is how the ensemble mirrors a live game.
+  function runModel(p, init, rand, warmFlags) {
+    var rounds = [], g = init;
+    var n = warmFlags ? warmFlags.length : p.rounds;
+    for (var k = 1; k <= n; k++) {
+      var warm = warmFlags ? !!warmFlags[k - 1] : (p.warmRound > 0 && k >= p.warmRound);
+      var r = modelRound(g, p, warm, rand);
+      rounds.push(r);
+      g = r.grid;
+    }
+    return { params: p, init: init, rounds: rounds };
+  }
+  function statesOf(run) { return [run.init].concat(run.rounds.map(function (r) { return r.grid; })); }
+
+  // Who stands where after k rounds. The wind has period 3 in both rows.
+  var ID_GRID = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+  function idsAt(k) {
+    var g = ID_GRID;
+    for (var i = 0; i < ((k % 3) + 3) % 3; i++) g = windShift(g);
+    return g;
+  }
+  function namesAt(k, names) {
+    return idsAt(k).map(function (r) {
+      return r.map(function (id) { return (names && names[id]) || DEFAULT_NAMES[id]; });
+    });
+  }
+  function posOf(id, k) {
+    var g = idsAt(k);
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) if (g[i][j] === id) return [i, j];
+    return null;
+  }
+
+  // ============ COLOURS ============
+  var INK = '#111111';
+  var MUTED = '#5c5c5c';
+  var GRID = '#e6e1d5';
+  var WARM = '#df2a1e';
+  var ZONE_COL = ['#28348f', '#c65a2a', '#00954f'];   // north, tropics, south
+  var BAND = ['#cfe6f6', '#f6ea79', '#cfe6f6'];
+  var FONT = "'Archivo','Helvetica Neue',Arial,sans-serif";
+  function font(w, s) { return w + ' ' + s + 'px ' + FONT; }
+
+  // matplotlib's coolwarm, sampled at nine points, on the script's -20..70.
+  var CW = [[59, 76, 192], [98, 130, 234], [141, 176, 254], [184, 208, 249], [221, 220, 220],
+            [245, 196, 173], [244, 154, 123], [222, 96, 76], [180, 4, 38]];
+  var VMIN = -20, VMAX = 70;
+  function coolwarm(v) {
+    var t = Math.max(0, Math.min(1, (v - VMIN) / (VMAX - VMIN)));
+    var x = t * (CW.length - 1), i = Math.min(CW.length - 2, Math.floor(x)), f = x - i;
+    var a = CW[i], b = CW[i + 1];
+    return [0, 1, 2].map(function (c) { return Math.round(a[c] + (b[c] - a[c]) * f); });
+  }
+  function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
+  function inkOn(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255 < 0.5 ? '#ffffff' : INK; }
+
+  // ============ CANVAS ============
+  function prep(canvas) {
+    var r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, W: r.width, H: r.height };
+  }
+  function pill(ctx, x, y, text, bg, fg, size, align) {
+    ctx.font = font(800, size);
+    var w = ctx.measureText(text).width + size * 0.9, h = size * 1.55;
+    var x0 = align === 'right' ? x - w : (align === 'left' ? x : x - w / 2);
+    ctx.fillStyle = bg;
+    ctx.fillRect(x0, y - h / 2, w, h);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0, y - h / 2, w, h);
+    ctx.fillStyle = fg;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x0 + w / 2, y + 0.5);
+  }
+
+  // ============ THE FIELD (people on the 3x3 grid) ============
+  // A scene is a list of tokens at fractional grid positions plus optional
+  // exchange arrows and radiation labels. Animations only build scenes;
+  // drawing never needs to know which phase it is in.
+  function fieldGeom(W, H) {
+    var lab = Math.min(96, W * 0.21);
+    var top = 6, bot = 6, right = 6;
+    return { x0: lab, top: top, cw: (W - lab - right) / 3, ch: (H - top - bot) / 3 };
+  }
+
+  function drawField(canvas, scene) {
+    var c = prep(canvas);
+    if (!c) return;
+    var ctx = c.ctx, W = c.W, H = c.H, G = fieldGeom(W, H);
+    ctx.clearRect(0, 0, W, H);
+
+    for (var i = 0; i < 3; i++) {
+      ctx.fillStyle = BAND[i];
+      ctx.fillRect(G.x0, G.top + i * G.ch, 3 * G.cw, G.ch);
+      var ly = G.top + (i + 0.5) * G.ch;
+      ctx.fillStyle = INK;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.font = font(800, W < 400 ? 11 : 13);
+      ctx.fillText(ROW_NAMES[i].toUpperCase(), 8, ly - 8);
+      ctx.font = font(600, W < 400 ? 9.5 : 11);
+      ctx.fillText(i === 1 ? '← Passat' : 'Jetstream →', 8, ly + 9);
+    }
+
+    // Tokens are clipped to the grid so a person walking off one edge
+    // visibly re-enters from the other.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(G.x0, G.top, 3 * G.cw, 3 * G.ch);
+    ctx.clip();
+    scene.tokens.forEach(function (tok) { drawToken(ctx, G, tok); });
+    ctx.restore();
+
+    (scene.arrows || []).forEach(function (a) { drawArrow(ctx, G, a); });
+    if (scene.rad) drawRadiation(ctx, G, scene.rad);
+
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(G.x0, G.top, 3 * G.cw, 3 * G.ch);
+    ctx.beginPath();
+    for (var r = 1; r < 3; r++) {
+      ctx.moveTo(G.x0, G.top + r * G.ch);
+      ctx.lineTo(G.x0 + 3 * G.cw, G.top + r * G.ch);
+    }
+    ctx.stroke();
+  }
+
+  function tokenSize(G) { return Math.min(G.cw * 0.7, G.ch * 0.64); }
+
+  function drawToken(ctx, G, tok) {
+    var s = tokenSize(G);
+    var cx = G.x0 + (tok.x + 0.5) * G.cw, cy = G.top + (tok.y + 0.5) * G.ch;
+    var col = coolwarm(tok.v);
+    ctx.globalAlpha = tok.alpha == null ? 1 : tok.alpha;
+    ctx.fillStyle = rgb(col);
+    ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
+    ctx.lineWidth = tok.hl ? 4 : 2;
+    ctx.strokeStyle = tok.hl ? WARM : INK;
+    ctx.strokeRect(cx - s / 2, cy - s / 2, s, s);
+    var fg = inkOn(col);
+    ctx.fillStyle = fg;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = font(900, Math.max(12, s * 0.36));
+    ctx.fillText(fmt(Math.round(tok.v), 0), cx, cy + s * 0.08);
+    ctx.font = font(700, Math.max(8.5, s * 0.16));
+    var name = tok.name.length > 10 ? tok.name.slice(0, 9) + '…' : tok.name;
+    ctx.fillText(name, cx, cy - s * 0.3);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawArrow(ctx, G, a) {
+    if (a.pole === null) return;
+    var s = tokenSize(G);
+    var cx = G.x0 + (a.col + 0.5) * G.cw;
+    var yT = G.top + 1.5 * G.ch, yP = G.top + (a.pole + 0.5) * G.ch;
+    var dir = a.pole === 0 ? -1 : 1;
+    var y0 = yT + dir * s / 2, y1 = yP - dir * s / 2;
+    var x = cx + s * 0.22;
+    ctx.globalAlpha = a.alpha == null ? 1 : a.alpha;
+    ctx.strokeStyle = a.amount > 0 ? '#c65a2a' : MUTED;
+    ctx.lineWidth = a.amount > 0 ? 4 : 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y1 - dir * 1);
+    ctx.moveTo(x - 6, y1 - dir * 7);
+    ctx.lineTo(x, y1);
+    ctx.lineTo(x + 6, y1 - dir * 7);
+    ctx.stroke();
+    var label = a.amount === '' || a.amount == null ? '?' : '+' + a.amount;
+    pill(ctx, x + 10, (y0 + y1) / 2, label, a.amount > 0 ? '#ffe400' : '#ffffff', INK, 11, 'left');
+    ctx.globalAlpha = 1;
+  }
+
+  function drawRadiation(ctx, G, rad) {
+    var s = tokenSize(G);
+    ctx.globalAlpha = rad.alpha;
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
+        var cx = G.x0 + (j + 0.5) * G.cw, cy = G.top + (i + 0.5) * G.ch;
+        if (i === 1) pill(ctx, cx + s / 2, cy - s / 2, '☀ +' + rad.gain, '#ffe400', INK, 11, 'center');
+        else pill(ctx, cx + s / 2, cy - s / 2, '−' + rad.loss, rad.warm ? WARM : '#28348f', '#ffffff', 11, 'center');
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function staticTokens(grid, names) {
+    var t = [];
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) t.push({ x: j, y: i, v: grid[i][j], name: names[i][j] });
+    return t;
+  }
+  // Wind: every token slides one column; the one leaving an edge is drawn
+  // twice, once walking out and once walking back in from the far side.
+  function windTokens(grid, names, t) {
+    var out = [];
+    for (var i = 0; i < 3; i++) {
+      var dir = i === 1 ? -1 : 1;
+      for (var j = 0; j < 3; j++) {
+        var tok = { x: j + dir * t, y: i, v: grid[i][j], name: names[i][j] };
+        out.push(tok);
+        if (j + dir < 0 || j + dir > 2) out.push({ x: tok.x - dir * 3, y: i, v: tok.v, name: tok.name });
+      }
+    }
+    return out;
+  }
+  // Round phases shared by the model animation and the guided live round.
+  function phaseScene(phase, t, r, before, names0, names1, p) {
+    if (phase === 0) return { tokens: windTokens(before, names0, ease(t)), grid: before };
+    if (phase === 1) {
+      var g1 = lerpGrid(r.afterWind, r.afterExchange, ease(Math.min(1, t * 1.4)));
+      return {
+        tokens: staticTokens(g1, names1), grid: g1,
+        arrows: r.exchanges.map(function (e, j) { return { col: j, pole: e.pole, amount: e.amount, alpha: 1 }; })
+      };
+    }
+    var g2 = lerpGrid(r.afterExchange, r.grid, ease(Math.min(1, t * 1.4)));
+    return {
+      tokens: staticTokens(g2, names1), grid: g2,
+      rad: { alpha: Math.min(1, t * 3), gain: p.gain, loss: lossOf(p, r.warm), warm: r.warm }
+    };
+  }
+
+  // ============ LINE CHARTS ============
+  function niceStep(range, target) {
+    var raw = range / Math.max(1, target);
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  }
+
+  // cfg: { xMax, yMin, yMax, series:[{label,data,color,width,dash}],
+  //        bands:[{lo,hi,color}], warmAt, compact, direct }
+  function lineChart(canvas, cfg) {
+    canvas._cfg = cfg;
+    if (!canvas._hover) {
+      canvas._hover = true;
+      var move = function (e) {
+        var r = canvas.getBoundingClientRect();
+        canvas._hx = e.clientX - r.left;
+        drawLineChart(canvas);
+      };
+      canvas.addEventListener('pointermove', move);
+      canvas.addEventListener('pointerdown', move);
+      canvas.addEventListener('pointerleave', function () { canvas._hx = null; drawLineChart(canvas); });
+    }
+    drawLineChart(canvas);
+  }
+
+  function drawLineChart(canvas) {
+    var cfg = canvas._cfg;
+    var c = cfg && prep(canvas);
+    if (!c) return;
+    var ctx = c.ctx, W = c.W, H = c.H, cp = !!cfg.compact;
+    var pad = { l: cp ? 26 : 38, r: cfg.direct ? 58 : (cp ? 6 : 12), t: cp ? 6 : 12, b: cp ? 16 : 24 };
+    var pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+    var xMax = Math.max(1, cfg.xMax);
+    function X(i) { return pad.l + i / xMax * pw; }
+    function Y(v) { return pad.t + (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin)) * ph; }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // recessive grid
+    var ys = niceStep(cfg.yMax - cfg.yMin, cp ? 3 : 5);
+    ctx.font = font(600, cp ? 8.5 : 10);
+    ctx.lineWidth = 1;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'right';
+    for (var v = Math.ceil(cfg.yMin / ys) * ys; v <= cfg.yMax + 1e-9; v += ys) {
+      ctx.strokeStyle = GRID;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, Math.round(Y(v)) + 0.5);
+      ctx.lineTo(pad.l + pw, Math.round(Y(v)) + 0.5);
+      ctx.stroke();
+      ctx.fillStyle = MUTED;
+      ctx.fillText(fmt(v, 1), pad.l - 5, Y(v));
+    }
+    var xs = Math.max(1, Math.round(niceStep(xMax, cp ? 3 : 6)));
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var i = 0; i <= xMax; i += xs) ctx.fillText(String(i), X(i), pad.t + ph + 5);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t + ph + 0.5);
+    ctx.lineTo(pad.l + pw, pad.t + ph + 0.5);
+    ctx.stroke();
+
+    // greenhouse marker, between the last normal state and the first warm one
+    if (cfg.warmAt != null) {
+      var wx = X(cfg.warmAt - 0.5);
+      ctx.strokeStyle = WARM;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(wx, pad.t);
+      ctx.lineTo(wx, pad.t + ph);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (!cp) {
+        ctx.fillStyle = WARM;
+        ctx.font = font(800, 9.5);
+        // Bottom corner: the line ends and their labels live at the top right.
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('TREIBHAUS', wx - 4, pad.t + ph - 3);
+      }
+    }
+
+    (cfg.bands || []).forEach(function (b) {
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = 0.16;
+      ctx.beginPath();
+      b.hi.forEach(function (v, k) { if (k === 0) ctx.moveTo(X(k), Y(v)); else ctx.lineTo(X(k), Y(v)); });
+      for (var k = b.lo.length - 1; k >= 0; k--) ctx.lineTo(X(k), Y(b.lo[k]));
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    var maxLen = 0;
+    cfg.series.forEach(function (s) {
+      maxLen = Math.max(maxLen, s.data.length);
+      if (!s.data.length) return;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.width || 2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.setLineDash(s.dash || []);
+      ctx.beginPath();
+      s.data.forEach(function (v, k) { if (k === 0) ctx.moveTo(X(k), Y(v)); else ctx.lineTo(X(k), Y(v)); });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (s.data.length === 1) {
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(X(0), Y(s.data[0]), 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    // Direct labels at the line ends, nudged apart so they never overlap.
+    if (cfg.direct) {
+      var labs = cfg.series.filter(function (s) { return s.data.length && !s.noLabel; }).map(function (s) {
+        return { s: s, y: Y(s.data[s.data.length - 1]), x: X(s.data.length - 1) };
+      }).sort(function (a, b) { return a.y - b.y; });
+      for (var q = 1; q < labs.length; q++) if (labs[q].y - labs[q - 1].y < 13) labs[q].y = labs[q - 1].y + 13;
+      ctx.font = font(800, 10.5);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      labs.forEach(function (l) {
+        ctx.fillStyle = l.s.color;
+        ctx.fillRect(l.x + 5, l.y - 1.5, 7, 3);
+        ctx.fillStyle = INK;
+        ctx.fillText(l.s.label, l.x + 15, l.y);
+      });
+    }
+
+    // Crosshair + tooltip.
+    if (canvas._hx != null && maxLen > 0) {
+      var k = Math.round((canvas._hx - pad.l) / pw * xMax);
+      k = Math.max(0, Math.min(maxLen - 1, k));
+      var hx = X(k);
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(hx + 0.5, pad.t);
+      ctx.lineTo(hx + 0.5, pad.t + ph);
+      ctx.stroke();
+      var rows = [[k === 0 ? 'Start' : 'Runde ' + k, null]];
+      cfg.series.forEach(function (s) {
+        if (k >= s.data.length) return;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hx, Y(s.data[k]), 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        rows.push([(s.tip || s.label) + ': ' + fmt(s.data[k], 1), s.color]);
+      });
+      (cfg.bands || []).forEach(function (b) {
+        if (b.tip && k < b.lo.length) rows.push([b.tip + ': ' + fmt(b.lo[k], 1) + ' … ' + fmt(b.hi[k], 1), b.color]);
+      });
+      var fs = cp ? 9.5 : 11;
+      ctx.font = font(700, fs);
+      var tw = 0;
+      rows.forEach(function (r) { tw = Math.max(tw, ctx.measureText(r[0]).width); });
+      var bw = tw + (cp ? 18 : 26), bh = rows.length * (fs + 5) + 8;
+      var bx = hx + 10 + bw > W ? hx - 10 - bw : hx + 10;
+      bx = Math.max(2, bx);
+      var by = pad.t + 2;
+      ctx.fillStyle = 'rgba(255,255,255,.96)';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx, by, bw, bh);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      rows.forEach(function (r, n) {
+        var ty = by + 4 + (n + 0.5) * (fs + 5);
+        var tx = bx + 6;
+        if (r[1]) {
+          ctx.fillStyle = r[1];
+          ctx.fillRect(tx, ty - 1.5, cp ? 6 : 10, 3);
+          tx += cp ? 9 : 14;
+        }
+        ctx.fillStyle = INK;
+        ctx.font = font(n === 0 ? 800 : 600, fs);
+        ctx.fillText(r[0], tx, ty);
+      });
+    }
+  }
+
+  function rangeOf(arrays, minFloor, maxCeil, padding) {
+    var lo = Infinity, hi = -Infinity;
+    arrays.forEach(function (a) { a.forEach(function (v) { if (v < lo) lo = v; if (v > hi) hi = v; }); });
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    lo = Math.min(minFloor, Math.floor(lo - padding));
+    hi = Math.max(maxCeil, Math.ceil(hi + padding));
+    return [lo, hi];
+  }
+
+  // ============ HEATMAP (the script's imshow) ============
+  function drawHeatmap(canvas, grid, names, caption) {
+    var c = prep(canvas);
+    if (!c) return;
+    var ctx = c.ctx, W = c.W, H = c.H;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    var narrow = W < 420;
+    var lab = narrow ? 54 : 104, cb = narrow ? 44 : 56, top = 26, bot = 22;
+    var gw = W - lab - cb - 8, cellW = gw / 3, cellH = (H - top - bot) / 3;
+
+    ctx.fillStyle = INK;
+    ctx.font = font(800, narrow ? 11 : 13);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(caption, lab, 12);
+
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
+        var x = lab + j * cellW, y = top + i * cellH;
+        var col = coolwarm(grid[i][j]);
+        ctx.fillStyle = rgb(col);
+        ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+        ctx.fillStyle = inkOn(col);
+        ctx.textAlign = 'center';
+        ctx.font = font(900, Math.min(cellW, cellH) * 0.3);
+        ctx.fillText(fmt(grid[i][j], 0), x + cellW / 2, y + cellH / 2 + cellH * 0.06);
+        if (names) {
+          ctx.font = font(700, Math.max(9, Math.min(cellW, cellH) * 0.12));
+          var n = names[i][j];
+          ctx.fillText(n.length > 12 ? n.slice(0, 11) + '…' : n, x + cellW / 2, y + cellH * 0.2);
+        }
+      }
+      ctx.fillStyle = INK;
+      ctx.textAlign = 'right';
+      ctx.font = font(800, narrow ? 10 : 12);
+      ctx.fillText(narrow ? ROW_NAMES[i] : ROW_LONG[i], lab - 8, top + (i + 0.5) * cellH);
+    }
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(lab, top, gw, 3 * cellH);
+    ctx.font = font(600, 10);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = MUTED;
+    for (var jj = 0; jj < 3; jj++) ctx.fillText('Platz ' + (jj + 1), lab + (jj + 0.5) * cellW, top + 3 * cellH + 5);
+
+    // colour bar, same range as the script
+    var bx = W - cb + 6, bw = 12, by0 = top, by1 = top + 3 * cellH;
+    for (var py = by0; py < by1; py++) {
+      var v = VMAX - (py - by0) / (by1 - by0) * (VMAX - VMIN);
+      ctx.fillStyle = rgb(coolwarm(v));
+      ctx.fillRect(bx, py, bw, 1.5);
+    }
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by0, bw, by1 - by0);
+    ctx.fillStyle = INK;
+    ctx.font = font(600, 9.5);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (var t = VMIN; t <= VMAX; t += 10) {
+      if (narrow && (t - VMIN) % 20) continue;
+      var ty = by1 - (t - VMIN) / (VMAX - VMIN) * (by1 - by0);
+      ctx.fillText(fmt(t, 0), bx + bw + 4, ty);
+    }
+  }
+
+  // ============ MODEL VIEW ============
+  var PARAM_FIELDS = [
+    { key: 'gain', label: 'Sonne', sub: 'je Tropen-Platz', min: 0, max: 50 },
+    { key: 'loss', label: 'Abstrahlung', sub: 'je Hemisphären-Platz', min: 0, max: 50 },
+    { key: 'lossWarm', label: 'Abstrahlung Treibhaus', sub: 'nach der Wendung', min: 0, max: 50 },
+    { key: 'total', label: 'Startenergie', sub: 'Summe der Tropen', min: 0, max: 999 },
+    { key: 'initMin', label: 'Startwert min.', sub: 'Tropen 1 und 2', min: -99, max: 999 },
+    { key: 'initMax', label: 'Startwert max.', sub: 'Tropen 1 und 2', min: -99, max: 999 }
+  ];
+  var MODEL_FIELDS = [
+    { key: 'rounds', label: 'Runden', sub: 'ohne den Start', min: 1, max: 200 },
+    { key: 'warmRound', label: 'Treibhaus ab Runde', sub: '0 = nie', min: 0, max: 200 }
+  ].concat(PARAM_FIELDS);
+
+  function paramsHTML(prefix, p, fields) {
+    return fields.map(function (f) {
+      return '<label class="param"><span>' + f.label + (f.sub ? '<small>' + f.sub + '</small>' : '') +
+        '</span><input type="number" id="' + prefix + f.key + '" value="' + p[f.key] + '" min="' + f.min + '" max="' + f.max + '" /></label>';
+    }).join('');
+  }
+  function readParams(prefix, base, fields) {
+    var p = Object.assign({}, base);
+    fields.forEach(function (f) {
+      var el = $(prefix + f.key);
+      if (!el) return;
+      var v = parseInt(el.value, 10);
+      if (isFinite(v)) p[f.key] = Math.max(f.min, Math.min(f.max, v));
+    });
+    if (p.initMax < p.initMin) { var t = p.initMin; p.initMin = p.initMax; p.initMax = t; }
+    return p;
+  }
+
+  var PHASE_TEXT = [
+    '<b>1 · Wind.</b> Die Jetstreams schieben Nord und Süd einen Platz nach rechts, der Passat die Tropen einen Platz nach links.',
+    '<b>2 · Austausch.</b> Jede Tropen-Position gibt der Seite mit der größeren Differenz zufällig 0 bis ½ Differenz ab.',
+    '<b>3 · Strahlung.</b> Die Sonne heizt die Tropen, die Hemisphären strahlen ins Weltall ab.'
+  ];
+
+  var model = {
+    p: Object.assign({}, DEFAULT_PARAMS), seed: newSeed(), run: null,
+    k: 0,            // completed rounds shown
+    phase: -1,       // -1 = resting on state k, else the phase of round k+1
+    t: 0, playing: false, held: false, stopAfter: false, speed: 1, drawnK: -1
+  };
+  var PHASE_DUR = 1.1;   // seconds per phase at 1x
+
+  function modelStart() {
+    var rand = mulberry32(model.seed);
+    var init = initialGrid(randInt(rand, model.p.initMin, model.p.initMax),
+                           randInt(rand, model.p.initMin, model.p.initMax), model.p.total);
+    model.run = runModel(model.p, init, rand);
+    model.k = 0;
+    model.phase = -1;
+    model.t = 0;
+    model.playing = false;
+    model.held = false;
+    model.drawnK = -1;
+    results.ensCache = null;
+    $('mo-seed').value = model.seed;
+    renderModel();
+  }
+
+  function modelNextPhase() {
+    var R = model.run.rounds.length;
+    model.held = false;
+    model.t = 0;
+    if (model.phase === 2) { model.k++; model.phase = -1; }
+    if (model.k >= R) { model.playing = false; model.phase = -1; return false; }
+    model.phase++;
+    return true;
+  }
+
+  function tickModel(dt) {
+    if (!model.playing) return;
+    model.t += dt * model.speed / PHASE_DUR;
+    if (model.t >= 1) {
+      model.t = 1;
+      if (model.stopAfter) {
+        model.playing = false;
+        model.stopAfter = false;
+        model.held = true;
+      } else if (!modelNextPhase()) {
+        // reached the end
+      }
+    }
+    renderModel();
+  }
+
+  function modelScene() {
+    var run = model.run, st = statesOf(run), k = model.k;
+    if (model.phase < 0) return { tokens: staticTokens(st[k], namesAt(k)), grid: st[k] };
+    return phaseScene(model.phase, model.t, run.rounds[k], st[k], namesAt(k), namesAt(k + 1), run.params);
+  }
+
+  function renderModel() {
+    if (!model.run) return;
+    var scene = modelScene();
+    drawField($('model-field'), scene);
+    var R = model.run.rounds.length;
+    var inRound = model.phase >= 0;
+    var shownRound = inRound ? model.k + 1 : model.k;
+    var r = model.run.rounds[Math.max(0, shownRound - 1)];
+    $('mo-round').textContent = shownRound + ' / ' + R;
+    $('mo-mean').textContent = fmt(gridMean(scene.grid), 2);
+    $('mo-sum').textContent = fmt(Math.round(gridSum(scene.grid)), 0);
+    var warmNow = shownRound > 0 && r.warm;
+    $('mo-warm').textContent = '−' + lossOf(model.run.params, warmNow) + (warmNow ? ' Treibhaus' : '');
+    $('mo-warm').style.color = warmNow ? WARM : '';
+    $('model-caption').innerHTML = inRound
+      ? 'Runde ' + (model.k + 1) + ' — ' + PHASE_TEXT[model.phase]
+      : (model.k === 0
+        ? '<b>Start.</b> Die Hemisphären haben 0 Punkte, die Tropen zusammen ' + model.run.params.total + '. Drücke <b>Start</b> oder <b>Schritt</b>.'
+        : (model.k >= R ? '<b>Fertig.</b> ' + R + ' Runden gespielt. Unter „Alle Diagramme“ gibt es die Auswertung.' : '<b>Runde ' + model.k + ' fertig.</b>'));
+
+    var atEnd = model.k >= R;
+    $('mo-play-label').textContent = model.playing ? 'Pause' : (atEnd ? 'Nochmal' : (model.k || inRound ? 'Weiter' : 'Start'));
+    $('mo-play-sub').textContent = model.playing ? 'Animation anhalten' : (atEnd ? 'Von vorn abspielen' : 'Animation abspielen');
+    $('mo-play-icon').innerHTML = model.playing
+      ? '<path d="M8 4h3v16H8zM13 4h3v16h-3z" fill="currentColor"/>'
+      : '<path d="M6 4l14 8-14 8V4z" fill="currentColor"/>';
+    $('mo-step').disabled = atEnd;
+    $('mo-end').disabled = atEnd;
+
+    // The mean curve only needs redrawing when a state is completed.
+    var doneK = model.phase === 2 && model.held ? model.k + 1 : model.k;
+    if (doneK !== model.drawnK) {
+      model.drawnK = doneK;
+      drawModelMean(doneK);
+    }
+  }
+
+  function drawModelMean(doneK) {
+    var st = statesOf(model.run).slice(0, doneK + 1);
+    var means = st.map(gridMean);
+    var all = statesOf(model.run).map(gridMean);
+    var yr = rangeOf([all], 0, 20, 1);
+    var wIdx = model.run.rounds.findIndex(function (r) { return r.warm; });
+    lineChart($('model-mean'), {
+      xMax: model.run.rounds.length, yMin: yr[0], yMax: yr[1],
+      warmAt: wIdx >= 0 ? wIdx + 1 : null,
+      series: [{ label: 'Mittel', data: means, color: INK, width: 2.5 }]
+    });
+  }
+
+  function setupModel() {
+    $('model-params').innerHTML = paramsHTML('mp-', model.p, MODEL_FIELDS);
+    $('mo-seed').value = model.seed;
+
+    $('mo-play').addEventListener('click', function () {
+      if (model.playing) { model.playing = false; renderModel(); return; }
+      if (model.k >= model.run.rounds.length) { model.k = 0; model.phase = -1; model.drawnK = -1; }
+      if (model.phase < 0 || model.held) modelNextPhase();
+      model.stopAfter = false;
+      model.playing = true;
+      renderModel();
+    });
+    $('mo-step').addEventListener('click', function () {
+      if (model.playing) { model.stopAfter = true; return; }
+      if (model.phase < 0 || model.held) { if (!modelNextPhase()) { renderModel(); return; } }
+      model.stopAfter = true;
+      model.playing = true;
+    });
+    $('mo-end').addEventListener('click', function () {
+      model.k = model.run.rounds.length;
+      model.phase = -1;
+      model.playing = false;
+      model.held = false;
+      renderModel();
+    });
+    $('mo-speed').addEventListener('input', function () {
+      model.speed = parseFloat(this.value);
+      $('mo-speed-label').textContent = fmt(model.speed, 1) + '×';
+    });
+    $('mo-new').addEventListener('click', function () { model.seed = newSeed(); modelStart(); });
+    $('mo-results').addEventListener('click', function () { results.source = 'model'; showTab('auswertung'); });
+    $('mo-reseed').addEventListener('click', function () { $('mo-seed').value = newSeed(); });
+    $('mo-tie').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-tie]');
+      if (!b) return;
+      this.querySelectorAll('[data-tie]').forEach(function (x) { x.classList.toggle('active', x === b); });
+    });
+    $('mo-defaults').addEventListener('click', function () {
+      $('model-params').innerHTML = paramsHTML('mp-', DEFAULT_PARAMS, MODEL_FIELDS);
+      $('mo-tie').querySelectorAll('[data-tie]').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-tie') === 'random'); });
+    });
+    $('mo-apply').addEventListener('click', function () {
+      model.p = readParams('mp-', DEFAULT_PARAMS, MODEL_FIELDS);
+      model.p.tie = $('mo-tie').querySelector('.active').getAttribute('data-tie');
+      var s = parseInt($('mo-seed').value, 10);
+      model.seed = isFinite(s) ? s : newSeed();
+      $('model-params').innerHTML = paramsHTML('mp-', model.p, MODEL_FIELDS);
+      modelStart();
+    });
+  }
+
+  // ============ LIVE GAME ============
+  var STORE_KEY = 'scapeKlimaspiel.game';
+  var game = null;
+  var live = { anim: null, setupT: ['', ''] };
+
+  function validGame(g) {
+    return g && g.params && Array.isArray(g.init) && g.init.length === 3 && Array.isArray(g.rounds) &&
+      Array.isArray(g.names) && g.names.length === 9;
+  }
+  function loadGame() {
+    try {
+      var s = localStorage.getItem(STORE_KEY);
+      if (s) { var g = JSON.parse(s); if (validGame(g)) game = g; }
+    } catch (e) {}
+    if (game && !game.draft) game.draft = newDraft();
+  }
+  function saveGame() {
+    try {
+      if (game) localStorage.setItem(STORE_KEY, JSON.stringify(game));
+      else localStorage.removeItem(STORE_KEY);
+    } catch (e) {}
+  }
+  function gameStates() { return [game.init].concat(game.rounds.map(function (r) { return r.grid; })); }
+  function lastState() { var st = gameStates(); return st[st.length - 1]; }
+
+  function newDraft() {
+    var aw = windShift(lastState());
+    var ex = [];
+    for (var j = 0; j < 3; j++) {
+      var r = exchangeRule(aw, j);
+      ex.push({ pole: r.tie ? (Math.random() < 0.5 ? 0 : 2) : r.pole, amount: '' });
+    }
+    return { step: 1, ex: ex, final: null, manual: ['', '', '', '', '', '', '', '', ''] };
+  }
+
+  function parseAmount(s) { var v = parseInt(s, 10); return isFinite(v) ? v : null; }
+
+  // Everything the current round needs, derived from the saved state and
+  // the draft -- nothing derived is ever stored.
+  function draftCalc() {
+    var k = game.rounds.length + 1;
+    var prev = lastState(), aw = windShift(prev);
+    var ex = game.draft.ex.map(function (e) {
+      var a = parseAmount(e.amount);
+      return { pole: e.pole, amount: e.pole === null ? 0 : (a == null ? 0 : a) };
+    });
+    var ae = applyExchanges(aw, ex);
+    var fin = radiate(ae, game.params, game.warm);
+    return {
+      k: k, prev: prev, aw: aw, ex: ex, ae: ae, fin: fin,
+      names0: namesAt(k - 1, game.names), names1: namesAt(k, game.names),
+      round: { afterWind: aw, exchanges: ex, afterExchange: ae, grid: fin, warm: game.warm }
+    };
+  }
+
+  function gridFromInputs(vals) {
+    var g = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (var n = 0; n < 9; n++) {
+      var v = parseAmount(vals[n]);
+      if (v == null) return null;
+      g[Math.floor(n / 3)][n % 3] = v;
+    }
+    return g;
+  }
+
+  function energyCheckHTML(prev, g) {
+    var exp = gridSum(prev) + expectedDelta(game.params, game.warm);
+    if (!g) return '<div class="check" id="energy-check"><b>Energie-Check:</b> Summe aller neun Werte muss <b>' + fmt(exp, 0) + '</b> ergeben (vorher ' + fmt(gridSum(prev), 0) + ', ' + signed(expectedDelta(game.params, game.warm)) + ' durch Sonne und Abstrahlung).</div>';
+    var s = gridSum(g), d = s - exp;
+    if (d === 0) return '<div class="check ok" id="energy-check"><b>Energie-Check ✓</b> Summe ' + fmt(s, 0) + ' = erwartet ' + fmt(exp, 0) + '. Mittel <b>' + fmt(s / 9, 2) + '</b>.</div>';
+    return '<div class="check bad" id="energy-check"><b>Energie-Check ✗</b> Summe ' + fmt(s, 0) + ', erwartet ' + fmt(exp, 0) + ' — es sind <b>' + fmt(Math.abs(d), 0) + ' Punkte ' + (d > 0 ? 'zu viel' : 'zu wenig') + '</b>. Irgendwo hat sich jemand verrechnet. Nachfragen oder bewusst so übernehmen.</div>';
+  }
+
+  function gridInputsHTML(kind, vals, names, placeholders) {
+    var h = '<div class="gin">';
+    for (var i = 0; i < 3; i++) {
+      h += '<div class="gin-row r' + i + '"><span class="gin-lab">' + ROW_NAMES[i] + '</span>';
+      for (var j = 0; j < 3; j++) {
+        var n = i * 3 + j;
+        h += '<label class="gin-cell"><small>' + esc(names[i][j]) + '</small><input type="number" step="1" data-in="' + kind +
+          '" data-idx="' + n + '" value="' + esc(vals[n]) + '"' + (placeholders ? ' placeholder="' + placeholders[n] + '"' : '') +
+          ' aria-label="' + ROW_NAMES[i] + ' Platz ' + (j + 1) + '" /></label>';
+      }
+      h += '</div>';
+    }
+    return h + '</div>';
+  }
+
+  function setupHTML() {
+    var p = Object.assign({}, DEFAULT_PARAMS);
+    var h = '<div class="intro-blurb"><p class="blurb"><b>Neues Spiel vorbereiten.</b> Trage ein, wer wo steht, und lege die Startwerte fest. Danach führt dich die App durch jede Runde.</p></div>';
+    h += '<div class="section-label first">1 · Aufstellung (optional)</div>';
+    h += '<p class="note">So stehen die Mitspielenden zu Beginn. Namen wandern im Spiel mit, damit du später jeder Person ihre eigene Kurve zeigen kannst. Leer lassen = N1 … S3.</p>';
+    h += '<div class="gin">';
+    for (var i = 0; i < 3; i++) {
+      h += '<div class="gin-row r' + i + '"><span class="gin-lab">' + ROW_NAMES[i] + '</span>';
+      for (var j = 0; j < 3; j++) {
+        var n = i * 3 + j;
+        h += '<label class="gin-cell"><small>Platz ' + (j + 1) + '</small><input type="text" maxlength="14" data-name="' + n + '" placeholder="' + DEFAULT_NAMES[n] + '" /></label>';
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+    h += '<div class="section-label">2 · Startwerte</div>';
+    h += '<p class="note">Nord und Süd starten mit 0. Die ersten beiden Tropen-Personen wählen eine Zahl zwischen <b id="rng-lbl">' + p.initMin + ' und ' + p.initMax + '</b>, die dritte bekommt den Rest bis <b id="tot-lbl">' + p.total + '</b>.</p>';
+    h += '<div class="gin"><div class="gin-row r1"><span class="gin-lab">Tropen</span>' +
+      '<label class="gin-cell"><small>T1</small><input type="number" id="init-t1" value="' + esc(live.setupT[0]) + '" /></label>' +
+      '<label class="gin-cell"><small>T2</small><input type="number" id="init-t2" value="' + esc(live.setupT[1]) + '" /></label>' +
+      '<div class="gin-cell"><small>T3 = Rest</small><output id="init-t3">—</output></div></div></div>';
+    h += '<div class="check" id="init-check" hidden></div>';
+    h += '<div class="btn-row"><button class="btn" type="button" data-act="roll-init">Auswürfeln</button></div>';
+    h += '<details class="topic" style="margin-top:14px"><summary>Spielregeln anpassen</summary><div class="topic-body">' +
+      '<div class="params">' + paramsHTML('lp-', p, PARAM_FIELDS) + '</div>' +
+      '<p class="note">Die Wendung (Treibhauseffekt) löst du während des Spiels selbst aus.</p></div></details>';
+    h += '<div class="btn-row" style="margin-top:18px">' +
+      '<button class="btn" type="button" data-act="import">Spiel laden</button>' +
+      '<button class="btn primary" type="button" data-act="start-game" id="start-btn" disabled>Spiel starten</button></div>';
+    return h;
+  }
+
+  function setupParams() { return readParams('lp-', DEFAULT_PARAMS, PARAM_FIELDS); }
+
+  function updateSetup() {
+    var p = setupParams();
+    $('rng-lbl').textContent = p.initMin + ' und ' + p.initMax;
+    $('tot-lbl').textContent = p.total;
+    var a = parseAmount($('init-t1').value), b = parseAmount($('init-t2').value);
+    live.setupT = [$('init-t1').value, $('init-t2').value];
+    var chk = $('init-check');
+    if (a == null || b == null) {
+      $('init-t3').textContent = '—';
+      chk.hidden = true;
+      $('start-btn').disabled = true;
+      return;
+    }
+    $('init-t3').textContent = fmt(p.total - a - b, 0);
+    var out = [a, b].filter(function (v) { return v < p.initMin || v > p.initMax; });
+    chk.hidden = out.length === 0;
+    chk.className = 'check bad';
+    chk.innerHTML = 'Hinweis: ' + out.join(' und ') + ' liegt außerhalb von ' + p.initMin + '–' + p.initMax + '. Das Spiel geht trotzdem.';
+    $('start-btn').disabled = false;
+  }
+
+  function roundHeadHTML(calc) {
+    var p = game.params;
+    return '<div class="round-head"><h2>Runde ' + calc.k + '</h2><span>Mittel bisher ' + fmt(gridMean(calc.prev), 2) + '</span></div>' +
+      '<div class="row-label">Abstrahlung der Hemisphären</div>' +
+      '<div class="seg-row">' +
+      '<button class="seg-btn' + (!game.warm ? ' active' : '') + '" type="button" data-act="warm-off">Normal<span class="sub">−' + p.loss + ' pro Runde</span></button>' +
+      '<button class="seg-btn warm' + (game.warm ? ' active' : '') + '" type="button" data-act="warm-on">Treibhaus<span class="sub">−' + p.lossWarm + ' pro Runde</span></button></div>' +
+      '<div class="row-label">Eingabe</div>' +
+      '<div class="seg-row">' +
+      '<button class="seg-btn' + (game.entry !== 'manual' ? ' active' : '') + '" type="button" data-act="mode-guided">Geführt<span class="sub">Schritt für Schritt</span></button>' +
+      '<button class="seg-btn' + (game.entry === 'manual' ? ' active' : '') + '" type="button" data-act="mode-manual">Nur Endwerte<span class="sub">9 Zahlen eintippen</span></button></div>';
+  }
+
+  function stepperHTML(step) {
+    return '<div class="stepper">' + ['Wind', 'Austausch', 'Strahlung', 'Notieren'].map(function (l, i) {
+      var n = i + 1;
+      return '<button class="step-chip' + (n === step ? ' active' : '') + (n < step ? ' done' : '') + '" type="button" data-act="goto-step" data-step="' + n + '"' + (n > step ? ' disabled' : '') + '><b>' + n + '</b>' + l + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function xcardHTML(calc, j) {
+    var aw = calc.aw, nm = calc.names1, r = exchangeRule(aw, j), e = game.draft.ex[j];
+    var h = '<div class="xcard" data-col="' + j + '">';
+    h += '<div class="xhead"><span>Tropen · Platz ' + (j + 1) + '</span><b>' + esc(nm[1][j]) + ' · ' + fmt(aw[1][j], 0) + '</b></div>';
+    h += '<div class="xnb"><div class="' + (r.pole !== null && e.pole === 0 ? 'hot' : '') + '">Nord: ' + esc(nm[0][j]) + ' · ' + fmt(aw[0][j], 0) + '<small>Differenz ' + fmt(r.dN, 0) + '</small></div>' +
+      '<div class="' + (r.pole !== null && e.pole === 2 ? 'hot' : '') + '">Süd: ' + esc(nm[2][j]) + ' · ' + fmt(aw[2][j], 0) + '<small>Differenz ' + fmt(r.dS, 0) + '</small></div></div>';
+    if (r.pole === null) {
+      return h + '<p class="xrule">Kein Austausch: Beide Nachbarn sind mindestens so warm.</p></div>';
+    }
+    h += '<p class="xrule">' + (r.tie
+      ? 'Gleich große Differenz — die Person darf <b>frei wählen</b>.'
+      : 'Regel: an <b>' + (r.pole === 0 ? 'Nord' : 'Süd') + '</b> (größere Differenz).') +
+      ' Erlaubt: <b>0 bis <span id="xmax-' + j + '">' + maxFor(aw, j, e.pole) + '</span></b>.</p>';
+    h += '<div class="seg-row"><button class="seg-btn' + (e.pole === 0 ? ' active' : '') + '" type="button" data-act="pole" data-col="' + j + '" data-pole="0">An Nord</button>' +
+      '<button class="seg-btn' + (e.pole === 2 ? ' active' : '') + '" type="button" data-act="pole" data-col="' + j + '" data-pole="2">An Süd</button></div>';
+    h += '<div class="amount-row"><button type="button" data-act="amt-dec" data-col="' + j + '" aria-label="weniger">−</button>' +
+      '<input type="number" inputmode="numeric" min="0" data-in="amt" data-col="' + j + '" value="' + esc(e.amount) + '" placeholder="?" aria-label="Abgabe Platz ' + (j + 1) + '" />' +
+      '<button type="button" data-act="amt-inc" data-col="' + j + '" aria-label="mehr">+</button>' +
+      '<button type="button" class="rand" data-act="amt-rand" data-col="' + j + '">Zufall</button></div>';
+    h += '<div class="xwarn" id="xwarn-' + j + '"></div>';
+    return h + '</div>';
+  }
+
+  function xWarning(calc, j) {
+    var r = exchangeRule(calc.aw, j), e = game.draft.ex[j];
+    if (r.pole === null) return '';
+    var msgs = [];
+    if (!r.tie && e.pole !== r.pole) msgs.push('Die Regel wäre ' + (r.pole === 0 ? 'Nord' : 'Süd') + ' — bewusste Abweichung?');
+    var a = parseAmount(e.amount), m = maxFor(calc.aw, j, e.pole);
+    if (a != null && a < 0) msgs.push('Nur 0 oder mehr.');
+    else if (a != null && a > m) msgs.push('Mehr als die Hälfte der Differenz — erlaubt sind höchstens ' + m + '.');
+    return msgs.join(' ');
+  }
+
+  function step2Missing() {
+    var calc = draftCalc();
+    return game.draft.ex.filter(function (e, j) {
+      return exchangeRule(calc.aw, j).pole !== null && parseAmount(e.amount) == null;
+    }).length;
+  }
+
+  function guidedHTML(calc) {
+    var d = game.draft, p = game.params, h = stepperHTML(d.step);
+    h += '<div class="stage-card"><canvas id="live-field" class="field"></canvas></div>';
+    if (d.step === 1) {
+      h += '<div class="say"><div class="say-label">Ansage</div><p>Nord- und Südreihe: <b>einen Platz nach rechts</b> (Jetstream). Tropenreihe: <b>einen Platz nach links</b> (Passat). Wer am Rand steht, läuft auf die andere Seite.</p></div>';
+      h += '<div class="btn-row"><button class="btn" type="button" data-act="replay">Nochmal zeigen</button><button class="btn primary" type="button" data-act="step-next">Weiter</button></div>';
+    } else if (d.step === 2) {
+      h += '<div class="say"><div class="say-label">Ansage</div><p>Jede Tropen-Person vergleicht sich mit Nord- und Süd-Nachbar und gibt der Seite mit der <b>größeren Differenz</b> eine ganze Zahl zwischen <b>0 und der Hälfte</b> der Differenz ab. Trag ein, was die Personen sagen.</p></div>';
+      h += '<div class="xcards">' + [0, 1, 2].map(function (j) { return xcardHTML(calc, j); }).join('') + '</div>';
+      h += '<div class="btn-row small"><button class="btn" type="button" data-act="rand-all">Zufall für alle offenen</button></div>';
+      h += '<p class="note" id="step2-note"></p>';
+      h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn primary" type="button" data-act="step-next" id="step2-next">Weiter</button></div>';
+    } else if (d.step === 3) {
+      h += '<div class="say"><div class="say-label">Ansage</div><p>Die Sonne wärmt die Tropen: <b>jede Tropen-Person +' + p.gain + '</b>. Die Hemisphären strahlen ins Weltall ab: <b>jede Nord- und Süd-Person −' + lossOf(p, game.warm) + '</b>' +
+        (game.warm ? ' <b style="color:var(--red)">(Treibhaus: statt −' + p.loss + ')</b>' : '') + '.</p></div>';
+      h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn" type="button" data-act="replay">Nochmal</button><button class="btn primary" type="button" data-act="step-next">Weiter</button></div>';
+    } else {
+      h += '<div class="say"><div class="say-label">Ansage</div><p>Alle nennen ihren neuen Wert. Weicht eine Zahl von der Rechnung ab, zählt der Zettel — einfach überschreiben.</p></div>';
+      h += gridInputsHTML('final', d.final, calc.names1);
+      h += energyCheckHTML(calc.prev, gridFromInputs(d.final));
+      h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn primary" type="button" data-act="save-round" id="save-btn">Runde speichern</button></div>';
+    }
+    return h;
+  }
+
+  function manualHTML(calc) {
+    var d = game.draft, h = '';
+    h += '<div class="stage-card"><canvas id="live-field" class="field"></canvas></div>';
+    h += '<div class="say"><div class="say-label">Ablauf</div><p>Die Gruppe spielt die Runde selbst: Wind, Austausch, Strahlung. Dann trägst du alle neun Werte ein. Namen zeigen, wer <b>nach dem Wind</b> dort steht; grau ist der Wert vor dieser Runde.</p></div>';
+    var ph = [];
+    for (var n = 0; n < 9; n++) ph.push(fmt(calc.aw[Math.floor(n / 3)][n % 3], 0).replace('−', '-'));
+    h += gridInputsHTML('manual', d.manual, calc.names1, ph);
+    h += energyCheckHTML(calc.prev, gridFromInputs(d.manual));
+    h += '<div class="btn-row"><button class="btn primary" type="button" data-act="save-round" id="save-btn">Runde speichern</button></div>';
+    return h;
+  }
+
+  function protocolHTML() {
+    var st = gameStates();
+    var h = '<div class="protocol-wrap"><table class="protocol"><thead><tr><th>Rd.</th><th>Nord</th><th>Tropen</th><th>Süd</th><th>Mittel</th></tr></thead><tbody>';
+    for (var k = st.length - 1; k >= 0; k--) {
+      var g = st[k], r = k ? game.rounds[k - 1] : null;
+      h += '<tr' + (k === st.length - 1 ? ' class="latest"' : '') + '><td' + (r && r.warm ? ' class="warm" title="Treibhaus"' : '') + '>' + (k ? k + (r && r.warm ? '*' : '') : 'Start') + '</td>' +
+        [0, 1, 2].map(function (i) { return '<td>' + g[i].map(function (v) { return fmt(v, 0); }).join(' · ') + '</td>'; }).join('') +
+        '<td><b>' + fmt(gridMean(g), 2) + '</b></td></tr>';
+    }
+    return h + '</tbody></table></div>';
+  }
+
+  function renderLive() {
+    var root = $('live-root');
+    live.anim = null;
+    if (!game) {
+      root.innerHTML = setupHTML();
+      updateSetup();
+      return;
+    }
+    var calc = draftCalc();
+    var h = roundHeadHTML(calc);
+    h += game.entry === 'manual' ? manualHTML(calc) : guidedHTML(calc);
+    h += '<div class="section-label with-tools"><span>Protokoll</span><span style="font-size:10px;letter-spacing:.04em">* = Treibhaus</span></div>';
+    h += protocolHTML();
+    h += '<div class="btn-row small">' +
+      '<button class="btn" type="button" data-act="undo"' + (game.rounds.length ? '' : ' disabled') + '>Runde zurück</button>' +
+      '<button class="btn" type="button" data-act="to-results"' + (game.rounds.length ? '' : ' disabled') + '>Auswertung</button></div>';
+    h += '<div class="btn-row small">' +
+      '<button class="btn" type="button" data-act="export-json">JSON</button>' +
+      '<button class="btn" type="button" data-act="export-csv">CSV</button>' +
+      '<button class="btn" type="button" data-act="import">Laden</button>' +
+      '<button class="btn" type="button" data-act="new-game">Neues Spiel</button></div>';
+    h += '<p class="note">Das Spiel wird automatisch in diesem Browser gespeichert. JSON sichert es vollständig (auch zum Laden auf einem anderen Gerät), CSV öffnet sich in Excel.</p>';
+    root.innerHTML = h;
+
+    if (game.entry !== 'manual') {
+      if (game.draft.step === 1) live.anim = { phase: 0, t: 0 };
+      if (game.draft.step === 3) live.anim = { phase: 2, t: 0 };
+    }
+    updateLiveDerived();
+  }
+
+  function liveScene(calc) {
+    var d = game.draft;
+    if (game.entry === 'manual') {
+      var g = gridFromPartial(d.manual, calc.aw);
+      return { tokens: staticTokens(g, calc.names1) };
+    }
+    if (d.step === 1) {
+      if (live.anim) return phaseScene(0, live.anim.t, calc.round, calc.prev, calc.names0, calc.names1, game.params);
+      return { tokens: staticTokens(calc.aw, calc.names1) };
+    }
+    if (d.step === 2) {
+      var arrows = game.draft.ex.map(function (e, j) {
+        var ok = exchangeRule(calc.aw, j).pole !== null;
+        return { col: j, pole: ok ? e.pole : null, amount: e.amount === '' ? '' : calc.ex[j].amount };
+      });
+      return { tokens: staticTokens(calc.ae, calc.names1), arrows: arrows };
+    }
+    if (d.step === 3) return phaseScene(2, live.anim ? live.anim.t : 1, calc.round, calc.prev, calc.names0, calc.names1, game.params);
+    return { tokens: staticTokens(gridFromPartial(d.final, calc.fin), calc.names1) };
+  }
+  function gridFromPartial(vals, fallback) {
+    return fallback.map(function (r, i) {
+      return r.map(function (v, j) { var x = parseAmount(vals[i * 3 + j]); return x == null ? v : x; });
+    });
+  }
+
+  function drawLiveField() {
+    var cv = $('live-field');
+    if (cv && game) drawField(cv, liveScene(draftCalc()));
+  }
+
+  function tickLive(dt) {
+    if (!live.anim || !game) return;
+    live.anim.t = Math.min(1, live.anim.t + dt / 1.3);
+    drawLiveField();
+    if (live.anim.t >= 1) live.anim = null;
+  }
+
+  // Refresh warnings, checks and the field after typing, without rebuilding
+  // the inputs (which would steal the focus).
+  function updateLiveDerived() {
+    if (!game) return;
+    var calc = draftCalc(), d = game.draft;
+    if (game.entry !== 'manual' && d.step === 2) {
+      for (var j = 0; j < 3; j++) {
+        var w = $('xwarn-' + j);
+        if (w) w.textContent = xWarning(calc, j);
+        var mx = $('xmax-' + j);
+        if (mx) mx.textContent = maxFor(calc.aw, j, d.ex[j].pole);
+      }
+      var miss = step2Missing();
+      $('step2-note').textContent = miss ? 'Noch ' + miss + ' Abgabe' + (miss > 1 ? 'n' : '') + ' offen.' : '';
+      $('step2-next').disabled = miss > 0;
+    }
+    var chk = $('energy-check');
+    if (chk) {
+      var vals = game.entry === 'manual' ? d.manual : d.final;
+      var g = gridFromInputs(vals);
+      chk.outerHTML = energyCheckHTML(calc.prev, g);
+      $('save-btn').disabled = !g;
+      if (game.entry !== 'manual') {
+        document.querySelectorAll('[data-in="final"]').forEach(function (el) {
+          var n = +el.getAttribute('data-idx');
+          el.classList.toggle('changed', parseAmount(el.value) !== calc.fin[Math.floor(n / 3)][n % 3]);
+        });
+      }
+    }
+    drawLiveField();
+  }
+
+  function saveRound() {
+    var calc = draftCalc(), d = game.draft, rec;
+    if (game.entry === 'manual') {
+      var gm = gridFromInputs(d.manual);
+      if (!gm) return;
+      rec = { mode: 'manual', warm: !!game.warm, afterWind: calc.aw, exchanges: null, afterExchange: null, grid: gm };
+    } else {
+      var gf = gridFromInputs(d.final);
+      if (!gf) return;
+      var edited = JSON.stringify(gf) !== JSON.stringify(calc.fin);
+      rec = { mode: 'guided', warm: !!game.warm, afterWind: calc.aw, exchanges: calc.ex, afterExchange: calc.ae, grid: gf, edited: edited };
+    }
+    game.rounds.push(rec);
+    game.draft = newDraft();
+    saveGame();
+    renderLive();
+    window.scrollTo({ top: $('live-root').getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
+  }
+
+  function startGame() {
+    var p = setupParams();
+    var a = parseAmount($('init-t1').value), b = parseAmount($('init-t2').value);
+    if (a == null || b == null) return;
+    var names = [];
+    document.querySelectorAll('[data-name]').forEach(function (el) { names[+el.getAttribute('data-name')] = el.value.trim(); });
+    game = {
+      version: 1, created: new Date().toISOString(),
+      params: Object.assign({}, p, { tie: 'random' }),
+      names: names.map(function (n, i) { return n || DEFAULT_NAMES[i]; }),
+      init: initialGrid(a, b, p.total), rounds: [], warm: false, entry: 'guided', draft: null
+    };
+    game.draft = newDraft();
+    live.setupT = ['', ''];
+    results.ensCache = null;
+    saveGame();
+    renderLive();
+  }
+
+  function exportCSV() {
+    var head = ['Runde', 'Treibhaus'];
+    [0, 1, 2].forEach(function (i) { for (var j = 1; j <= 3; j++) head.push(ROW_NAMES[i] + ' ' + j); });
+    game.names.forEach(function (n) { head.push('Person ' + n); });
+    head.push('Mittel');
+    var lines = [head.join(';')];
+    gameStates().forEach(function (g, k) {
+      var row = [k === 0 ? 'Start' : k, k === 0 ? '' : (game.rounds[k - 1].warm ? 'ja' : 'nein')];
+      g.forEach(function (r) { r.forEach(function (v) { row.push(v); }); });
+      for (var id = 0; id < 9; id++) { var ps = posOf(id, k); row.push(g[ps[0]][ps[1]]); }
+      row.push(fmt(gridMean(g), 3).replace('−', '-'));
+      lines.push(row.join(';'));
+    });
+    download('klimaspiel-' + new Date().toISOString().slice(0, 10) + '.csv', '﻿' + lines.join('\r\n'), 'text/csv');
+  }
+
+  function setupLive() {
+    var root = $('live-root');
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]');
+      if (!b || b.disabled) return;
+      var act = b.getAttribute('data-act'), d = game && game.draft;
+      var col = +b.getAttribute('data-col');
+      switch (act) {
+        case 'roll-init': {
+          var p = setupParams();
+          $('init-t1').value = randInt(Math.random, p.initMin, p.initMax);
+          $('init-t2').value = randInt(Math.random, p.initMin, p.initMax);
+          updateSetup();
+          break;
+        }
+        case 'start-game': startGame(); break;
+        case 'import': $('import-file').click(); break;
+        case 'warm-off': case 'warm-on':
+          game.warm = act === 'warm-on';
+          // The radiation changed, so the values to confirm must be recomputed.
+          if (d.step === 4) d.final = flatStrings(draftCalc().fin);
+          saveGame(); renderLive(); break;
+        case 'mode-guided': case 'mode-manual':
+          game.entry = act === 'mode-manual' ? 'manual' : 'guided';
+          saveGame(); renderLive(); break;
+        case 'goto-step':
+          d.step = +b.getAttribute('data-step'); saveGame(); renderLive(); break;
+        case 'step-back':
+          d.step = Math.max(1, d.step - 1); saveGame(); renderLive(); break;
+        case 'step-next':
+          if (d.step === 2 && step2Missing()) return;
+          d.step = Math.min(4, d.step + 1);
+          if (d.step === 4) d.final = flatStrings(draftCalc().fin);
+          saveGame(); renderLive(); break;
+        case 'replay':
+          live.anim = { phase: d.step === 1 ? 0 : 2, t: 0 }; break;
+        case 'pole':
+          d.ex[col].pole = +b.getAttribute('data-pole'); saveGame(); renderLive(); break;
+        case 'amt-dec': case 'amt-inc': {
+          var a = parseAmount(d.ex[col].amount);
+          a = a == null ? 0 : a + (act === 'amt-inc' ? 1 : -1);
+          d.ex[col].amount = String(Math.max(0, a));
+          root.querySelector('[data-in="amt"][data-col="' + col + '"]').value = d.ex[col].amount;
+          saveGame(); updateLiveDerived(); break;
+        }
+        case 'amt-rand': case 'rand-all': {
+          var aw = draftCalc().aw;
+          [0, 1, 2].forEach(function (j) {
+            if (act === 'amt-rand' && j !== col) return;
+            if (exchangeRule(aw, j).pole === null) return;
+            if (act === 'rand-all' && parseAmount(d.ex[j].amount) != null) return;
+            d.ex[j].amount = String(randInt(Math.random, 0, maxFor(aw, j, d.ex[j].pole)));
+            var inp = root.querySelector('[data-in="amt"][data-col="' + j + '"]');
+            if (inp) inp.value = d.ex[j].amount;
+          });
+          saveGame(); updateLiveDerived(); break;
+        }
+        case 'save-round': saveRound(); break;
+        case 'undo':
+          if (!confirm('Die letzte Runde (' + game.rounds.length + ') löschen?')) return;
+          game.rounds.pop();
+          game.draft = newDraft();
+          saveGame(); renderLive(); break;
+        case 'to-results': results.source = 'game'; showTab('auswertung'); break;
+        case 'export-json':
+          download('klimaspiel-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(game, null, 1), 'application/json');
+          break;
+        case 'export-csv': exportCSV(); break;
+        case 'new-game':
+          if (!confirm('Neues Spiel beginnen? Das aktuelle Spiel wird gelöscht — vorher als JSON sichern, wenn du es behalten willst.')) return;
+          game = null; saveGame(); renderLive(); break;
+      }
+    });
+
+    root.addEventListener('input', function (e) {
+      var el = e.target;
+      if (el.id === 'init-t1' || el.id === 'init-t2' || (el.id && el.id.indexOf('lp-') === 0)) { updateSetup(); return; }
+      var kind = el.getAttribute('data-in');
+      if (!kind || !game) return;
+      if (kind === 'amt') game.draft.ex[+el.getAttribute('data-col')].amount = el.value;
+      else if (kind === 'final') game.draft.final[+el.getAttribute('data-idx')] = el.value;
+      else if (kind === 'manual') game.draft.manual[+el.getAttribute('data-idx')] = el.value;
+      saveGame();
+      updateLiveDerived();
+    });
+
+    $('import-file').addEventListener('change', function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var g = JSON.parse(reader.result);
+          if (!validGame(g)) throw new Error('format');
+          if (game && !confirm('Das geladene Spiel ersetzt das aktuelle. Fortfahren?')) return;
+          game = g;
+          game.draft = newDraft();
+          results.ensCache = null;
+          saveGame();
+          renderLive();
+        } catch (err) {
+          alert('Diese Datei ist kein gespeichertes Klimaspiel.');
+        }
+      };
+      reader.readAsText(f);
+      this.value = '';
+    });
+  }
+  function flatStrings(g) { var o = []; g.forEach(function (r) { r.forEach(function (v) { o.push(String(v)); }); }); return o; }
+
+  // ============ RESULTS ============
+  var results = { source: null, k: 0, playing: false, acc: 0, sm: 'pos', ens: false, ensCache: null };
+
+  function resultsData() {
+    if (results.source === 'game') {
+      if (!game || !game.rounds.length) return null;
+      return { label: 'Live-Spiel', params: game.params, init: game.init, rounds: game.rounds, names: game.names };
+    }
+    if (!model.run) return null;
+    return { label: 'Modelllauf (Seed ' + model.seed + ')', params: model.run.params, init: model.run.init, rounds: model.run.rounds, names: null };
+  }
+
+  function pct(a, q) {
+    var s = a.slice().sort(function (x, y) { return x - y; });
+    var i = (s.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i);
+    return s[lo] + (s[hi] - s[lo]) * (i - lo);
+  }
+
+  // 100 model runs from the same start with the same greenhouse rounds:
+  // the spread the rules alone produce, to hold a human game against.
+  function ensemble(d) {
+    var warmFlags = d.rounds.map(function (r) { return !!r.warm; });
+    var key = results.source + '|' + JSON.stringify(d.init) + '|' + warmFlags.join('') + '|' + JSON.stringify(d.params);
+    if (results.ensCache && results.ensCache.key === key) return results.ensCache.data;
+    var zones = [[], [], []];
+    for (var n = 0; n < 100; n++) {
+      var run = runModel(Object.assign({}, d.params, { tie: 'random' }), d.init, mulberry32(7919 * (n + 1)), warmFlags);
+      statesOf(run).forEach(function (g, k) {
+        for (var i = 0; i < 3; i++) (zones[i][k] = zones[i][k] || []).push(rowMean(g, i));
+      });
+    }
+    var out = zones.map(function (z) {
+      return { lo: z.map(function (a) { return pct(a, 0.1); }), hi: z.map(function (a) { return pct(a, 0.9); }) };
+    });
+    results.ensCache = { key: key, data: out };
+    return out;
+  }
+
+  function legendHTML(items) {
+    return items.map(function (it) {
+      return '<span><i class="' + (it.cls || '') + '" style="background:' + it.color + ';color:' + it.color + '"></i>' + it.label + '</span>';
+    }).join('');
+  }
+
+  function renderResults() {
+    if (!results.source) results.source = game && game.rounds.length ? 'game' : 'model';
+    document.querySelectorAll('#res-source [data-source]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-source') === results.source);
+    });
+    var d = resultsData();
+    $('res-empty').hidden = !!d;
+    $('res-body').hidden = !d;
+    if (!d) {
+      $('res-empty').innerHTML = results.source === 'game'
+        ? 'Noch keine gespielte Runde. Unter <b>Spiel leiten</b> ein Spiel beginnen — oder oben den <b>Modelllauf</b> ansehen.'
+        : 'Noch kein Modelllauf.';
+      return;
+    }
+    var st = statesOf(d), n = st.length - 1;
+    $('res-label').textContent = d.label;
+    $('ro-n').textContent = n;
+    $('ro-m0').textContent = fmt(gridMean(st[0]), 2);
+    $('ro-m1').textContent = fmt(gridMean(st[n]), 2);
+    $('ro-grad').textContent = fmt(rowMean(st[n], 1) - (rowMean(st[n], 0) + rowMean(st[n], 2)) / 2, 1);
+
+    var slider = $('heat-k');
+    slider.max = n;
+    results.k = Math.min(results.k, n);
+    slider.value = results.k;
+    drawResHeat(d);
+
+    var wIdx = d.rounds.findIndex(function (r) { return r.warm; });
+    var warmAt = wIdx >= 0 ? wIdx + 1 : null;
+
+    // global mean
+    var means = st.map(gridMean);
+    var mSeries = [{ label: 'Mittel', tip: 'Mittel', data: means, color: INK, width: 2.5 }];
+    var legend = [{ label: 'Gemessenes Mittel', color: INK }];
+    if (results.source === 'game') {
+      var exp = [means[0]];
+      d.rounds.forEach(function (r, k) { exp.push(exp[k] + expectedDelta(d.params, r.warm) / 9); });
+      mSeries.unshift({ label: 'Bilanz', tip: 'Laut Energiebilanz', data: exp, color: '#8a8a8a', width: 2, dash: [5, 4] });
+      legend.push({ label: 'Laut Energiebilanz', color: '#8a8a8a', cls: 'dash' });
+      var off = means.some(function (m, k) { return Math.abs(m - exp[k]) > 1e-9; });
+      $('note-mean').textContent = off
+        ? 'Wo die Linien auseinanderlaufen, hat sich jemand verrechnet — die Energiebilanz allein legt den Mittelwert fest.'
+        : 'Beide Linien liegen genau übereinander: Den Mittelwert bestimmt allein die Energiebilanz, nicht der Zufall beim Austausch.';
+    } else {
+      $('note-mean').textContent = 'Egal wie gewürfelt wird: Der Mittelwert hängt nur an Sonne und Abstrahlung. Ohne Treibhaus bleibt er konstant, danach steigt er um 6/9 pro Runde.';
+    }
+    $('leg-mean').innerHTML = legendHTML(legend);
+    var yr = rangeOf(mSeries.map(function (s) { return s.data; }), 0, 20, 1);
+    lineChart($('res-mean'), { xMax: n, yMin: yr[0], yMax: yr[1], warmAt: warmAt, series: mSeries });
+
+    // zonal means
+    var zSeries = [0, 1, 2].map(function (i) {
+      return { label: ROW_NAMES[i], data: st.map(function (g) { return rowMean(g, i); }), color: ZONE_COL[i], width: 2.5 };
+    });
+    var zLegend = zSeries.map(function (s) { return { label: s.label, color: s.color }; });
+    var bands = [];
+    if (results.ens) {
+      var ens = ensemble(d);
+      bands = [0, 1, 2].map(function (i) { return { lo: ens[i].lo, hi: ens[i].hi, color: ZONE_COL[i], tip: 'Modelle ' + ROW_NAMES[i] }; });
+      zLegend.push({ label: 'Modell-Band (80 %)', color: MUTED, cls: 'band' });
+    }
+    $('leg-zonal').innerHTML = legendHTML(zLegend);
+    var zr = rangeOf(zSeries.map(function (s) { return s.data; }).concat(bands.map(function (b) { return b.lo; }), bands.map(function (b) { return b.hi; })), 0, 0, 3);
+    lineChart($('res-zonal'), { xMax: n, yMin: zr[0], yMax: zr[1], warmAt: warmAt, series: zSeries, bands: bands, direct: true });
+
+    renderSmallMultiples(d, st, warmAt);
+  }
+
+  function drawResHeat(d) {
+    var st = statesOf(d), k = results.k;
+    var names = namesAt(k, d.names);
+    var r = k ? d.rounds[k - 1] : null;
+    drawHeatmap($('res-heat'), st[k], names,
+      (k === 0 ? 'Start' : 'Nach Runde ' + k) + (r && r.warm ? ' · Treibhaus' : '') + ' · Mittel ' + fmt(gridMean(st[k]), 2));
+  }
+
+  function renderSmallMultiples(d, st, warmAt) {
+    var box = $('res-sm');
+    var byPerson = results.sm === 'person';
+    $('sm-sub').textContent = byPerson
+      ? 'Jedes Kästchen ist eine Person — ihre eigene Kurve'
+      : 'Jedes Kästchen ist ein Platz im Raster, wie im Python-Skript';
+    var cells = [];
+    for (var n = 0; n < 9; n++) {
+      var i = Math.floor(n / 3), j = n % 3, data, title;
+      if (byPerson) {
+        data = st.map(function (g, k) { var ps = posOf(n, k); return g[ps[0]][ps[1]]; });
+        title = (d.names && d.names[n]) || DEFAULT_NAMES[n];
+      } else {
+        data = st.map(function (g) { return g[i][j]; });
+        title = ROW_NAMES[i] + ' · Platz ' + (j + 1);
+      }
+      cells.push({ data: data, title: title, color: ZONE_COL[i] });
+    }
+    var yr = rangeOf(cells.map(function (c) { return c.data; }), VMIN, VMAX, 0);
+    box.innerHTML = cells.map(function (c, n) {
+      return '<div class="sm-cell"><div class="sm-title">' + esc(c.title) + '</div><canvas id="sm-' + n + '"></canvas></div>';
+    }).join('');
+    cells.forEach(function (c, n) {
+      lineChart($('sm-' + n), {
+        xMax: st.length - 1, yMin: yr[0], yMax: yr[1], warmAt: warmAt, compact: true,
+        series: [{ label: c.title, tip: 'Wert', data: c.data, color: c.color, width: 2 }]
+      });
+    });
+  }
+
+  function tickResults(dt) {
+    if (!results.playing) return;
+    var d = resultsData();
+    if (!d) { results.playing = false; return; }
+    results.acc += dt;
+    if (results.acc < 0.6) return;
+    results.acc = 0;
+    if (results.k >= d.rounds.length) {
+      results.playing = false;
+      $('heat-play').textContent = 'Abspielen';
+      return;
+    }
+    results.k++;
+    $('heat-k').value = results.k;
+    drawResHeat(d);
+  }
+
+  function setupResults() {
+    $('res-source').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-source]');
+      if (!b) return;
+      results.source = b.getAttribute('data-source');
+      results.k = 0;
+      results.playing = false;
+      $('heat-play').textContent = 'Abspielen';
+      renderResults();
+    });
+    $('heat-k').addEventListener('input', function () {
+      results.k = +this.value;
+      var d = resultsData();
+      if (d) drawResHeat(d);
+    });
+    $('heat-play').addEventListener('click', function () {
+      var d = resultsData();
+      if (!d) return;
+      results.playing = !results.playing;
+      if (results.playing && results.k >= d.rounds.length) { results.k = 0; drawResHeat(d); $('heat-k').value = 0; }
+      results.acc = 0;
+      this.textContent = results.playing ? 'Pause' : 'Abspielen';
+    });
+    $('res-ens').addEventListener('change', function () { results.ens = this.checked; renderResults(); });
+    $('sm-mode').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sm]');
+      if (!b) return;
+      results.sm = b.getAttribute('data-sm');
+      this.querySelectorAll('[data-sm]').forEach(function (x) { x.classList.toggle('active', x === b); });
+      renderResults();
+    });
+    document.querySelectorAll('[data-png]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var cv = $(b.getAttribute('data-png'));
+        var src = results.source === 'game' ? 'spiel' : 'modell';
+        cv.toBlob(function (blob) { download('klimaspiel-' + src + '-' + cv.id.replace('res-', '') + '.png', blob); });
+      });
+    });
+    $('res-beamer').addEventListener('click', toggleBeamer);
+    document.addEventListener('fullscreenchange', function () {
+      if (!document.fullscreenElement) setBeamer(false);
+    });
+  }
+
+  function setBeamer(on) {
+    document.documentElement.classList.toggle('beamer', on);
+    $('res-beamer').textContent = on ? 'Beamer beenden' : 'Beamer-Ansicht';
+    requestAnimationFrame(redrawCurrent);
+  }
+  function toggleBeamer() {
+    var on = !document.documentElement.classList.contains('beamer');
+    setBeamer(on);
+    try {
+      if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+      if (!on && document.fullscreenElement) document.exitFullscreen();
+    } catch (e) {}
+  }
+
+  // ============ TABS ============
+  var TABS = ['anleitung', 'modell', 'spiel', 'auswertung'];
+  var currentTab = 'anleitung';
+
+  function showTab(name) {
+    if (TABS.indexOf(name) < 0) name = 'anleitung';
+    if (name !== 'auswertung' && document.documentElement.classList.contains('beamer')) setBeamer(false);
+    currentTab = name;
+    TABS.forEach(function (t) { $('view-' + t).hidden = t !== name; });
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === name); });
+    if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+    redrawCurrent();
+  }
+
+  function redrawCurrent() {
+    if (currentTab === 'modell') { model.drawnK = -1; renderModel(); }
+    else if (currentTab === 'spiel') { if (game) drawLiveField(); }
+    else if (currentTab === 'auswertung') renderResults();
+  }
+
+  // ============ VIEW MODE (phone / desktop) ============
+  var VIEW_STORAGE_KEY = 'scapeViewMode';
+  var MOBILE_QUERY = '(max-width: 699px)';
+  var viewToggleBtn = $('view-toggle');
+
+  function setViewMode(m) {
+    document.documentElement.setAttribute('data-view', m);
+    viewToggleBtn.textContent = m === 'mobile' ? 'Desktop-Ansicht' : 'Mobile-Ansicht';
+    viewToggleBtn.setAttribute('aria-label', m === 'mobile' ? 'Zur Desktop-Ansicht wechseln' : 'Zur Mobile-Ansicht wechseln');
+  }
+
+  function setupViewToggle() {
+    setViewMode(document.documentElement.getAttribute('data-view') || 'mobile');
+    viewToggleBtn.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-view') === 'mobile' ? 'desktop' : 'mobile';
+      setViewMode(next);
+      try { localStorage.setItem(VIEW_STORAGE_KEY, next); } catch (e) {}
+      redrawCurrent();
+    });
+    var mql = window.matchMedia(MOBILE_QUERY);
+    function onViewportChange(e) {
+      var hasOverride = false;
+      try { hasOverride = localStorage.getItem(VIEW_STORAGE_KEY) !== null; } catch (err) {}
+      if (!hasOverride) {
+        setViewMode(e.matches ? 'mobile' : 'desktop');
+        redrawCurrent();
+      }
+    }
+    if (mql.addEventListener) mql.addEventListener('change', onViewportChange);
+  }
+
+  // ============ ANIMATION LOOP ============
+  var lastT = 0;
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    var dt = lastT ? Math.min((ts - lastT) / 1000, 0.05) : 0;
+    lastT = ts;
+    if (currentTab === 'modell') tickModel(dt);
+    if (currentTab === 'spiel') tickLive(dt);
+    if (currentTab === 'auswertung') tickResults(dt);
+  }
+
+  // ============ INIT ============
+  function init() {
+    setupViewToggle();
+    document.querySelectorAll('.tab-btn, [data-goto]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        showTab(b.getAttribute('data-tab') || b.getAttribute('data-goto'));
+        if (b.hasAttribute('data-goto')) window.scrollTo({ top: $('tabs').offsetTop, behavior: 'smooth' });
+      });
+    });
+    setupModel();
+    setupLive();
+    setupResults();
+    loadGame();
+    modelStart();
+    renderLive();
+    showTab((location.hash || '').slice(1) || 'anleitung');
+    requestAnimationFrame(frame);
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(redrawCurrent, 80);
+  });
+  window.addEventListener('hashchange', function () { showTab(location.hash.slice(1)); });
+
+  init();
+})();
+</script>
+
+</body>
+</html>
