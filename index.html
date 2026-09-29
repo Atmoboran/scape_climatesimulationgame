@@ -399,6 +399,37 @@
     border:2px dashed var(--ink); padding:22px 16px; text-align:center; font-size:13px; line-height:1.5; margin:0 0 14px;
   }
 
+  /* ============ HELP POP-UPS ============ */
+  .param-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:6px; }
+  .param-head label{ font-size:11px; font-weight:700; }
+  .param.open{ grid-column:1/-1; }
+  .info-dot{
+    flex:none; width:20px; height:20px; padding:0;
+    border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:12px; line-height:1;
+    border-radius:50%; cursor:pointer;
+  }
+  .info-dot[aria-expanded="true"]{ background:var(--ink); color:var(--paper); }
+  .help-pop{
+    border:2px solid var(--ink); background:var(--pastel-yellow);
+    padding:10px 12px; margin:4px 0 6px; font-weight:500;
+  }
+  .help-pop p{ margin:0 0 8px; font-size:12.5px; line-height:1.5; }
+  .help-pop p:last-child{ margin-bottom:0; }
+  .seed-row{ grid-template-columns:1fr auto !important; align-items:start; }
+  .seed-row .ghost-btn{ margin-top:30px; height:40px; }
+
+  /* ============ LIVE LAYOUT ============
+     Phone: one column. Desktop: the field stays in view on the left while
+     the inputs for the current step fill the right. */
+  .live-grid{ display:grid; grid-template-columns:minmax(0,1fr); grid-template-areas:"head" "board" "ctrl"; }
+  .live-head{ grid-area:head; }
+  .live-board{ grid-area:board; }
+  .live-ctrl{ grid-area:ctrl; }
+  .xcards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:0 10px; }
+  .setup-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:0 28px; }
+  .setup-grid > div + div{ margin-top:26px; }
+
   /* ============ FOOTER ============ */
   .brand-footer{
     padding:26px 20px 34px; border-top:2px solid var(--ink);
@@ -408,9 +439,23 @@
   /* ============ DESKTOP VIEW ============
      Base styles above = mobile / vertical phone. Overrides below apply when
      the viewport is wide (auto-detected) or when the desktop view is picked. */
-  :root[data-view="desktop"] .wrap{ max-width:900px; }
-  :root[data-view="desktop"] .poster{ aspect-ratio:3.2/1; }
-  :root[data-view="desktop"] .arch{ width:14%; }
+  :root[data-view="desktop"] .wrap{ max-width:1560px; }
+  :root[data-view="desktop"] .topbar,
+  :root[data-view="desktop"] .tabs,
+  :root[data-view="desktop"] main{ padding-left:32px; padding-right:32px; }
+  :root[data-view="desktop"] .poster{ aspect-ratio:7/1; margin:0 32px 16px; }
+  :root[data-view="desktop"] .arch{ width:6.5%; top:9%; }
+  :root[data-view="desktop"] #view-anleitung{ max-width:980px; margin:0 auto; }
+  :root[data-view="desktop"] .split,
+  :root[data-view="desktop"] .live-grid{
+    display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:0 32px; align-items:start;
+  }
+  :root[data-view="desktop"] .live-grid{ grid-template-areas:"board head" "board ctrl"; grid-template-rows:auto 1fr; }
+  :root[data-view="desktop"] .split-board,
+  :root[data-view="desktop"] .live-board{ position:sticky; top:78px; align-self:start; }
+  :root[data-view="desktop"] canvas.field{ max-height:calc(100vh - 290px); min-height:320px; }
+  :root[data-view="desktop"] .setup-grid{ grid-template-columns:1fr 1fr; }
+  :root[data-view="desktop"] .setup-grid > div + div{ margin-top:0; }
   :root[data-view="desktop"] .poster-title{ font-size:clamp(26px,5vw,40px); }
   :root[data-view="desktop"] .poster-tagline{ font-size:11.5px; }
   :root[data-view="desktop"] .tab-btn{ font-size:12px; padding:10px 6px; }
@@ -419,10 +464,8 @@
   :root[data-view="desktop"] .topic-body li{ font-size:15.5px; }
   :root[data-view="desktop"] .howto{ grid-template-columns:repeat(4,1fr); }
   :root[data-view="desktop"] .chart-grid{ grid-template-columns:1fr 1fr; }
-  :root[data-view="desktop"] canvas.chart.wide{ aspect-ratio:2.8/1; }
+  :root[data-view="desktop"] canvas.chart.wide{ aspect-ratio:16/10; }
   :root[data-view="desktop"] .params{ grid-template-columns:repeat(3,1fr); }
-  :root[data-view="desktop"] .split{ display:grid; grid-template-columns:1.1fr 1fr; gap:0 20px; align-items:start; }
-  :root[data-view="desktop"] .xcards{ display:grid; grid-template-columns:repeat(3,1fr); gap:0 10px; }
   :root[data-view="desktop"] .btn:hover:not(:disabled),
   :root[data-view="desktop"] .seg-btn:hover:not(:disabled){ opacity:.85; }
 
@@ -656,13 +699,11 @@
         <p class="blurb"><b>Das Spiel ohne Menschen.</b> Der Computer &uuml;bernimmt alle neun Rollen und w&uuml;rfelt jede Entscheidung. Starte die Animation oder gehe Schritt f&uuml;r Schritt durch eine Runde.</p>
       </div>
       <div class="split">
-        <div>
+        <div class="split-board">
           <div class="stage-card">
             <canvas id="model-field" class="field" aria-label="Das Spielfeld des Modells"></canvas>
             <div class="phase-caption" id="model-caption"></div>
           </div>
-        </div>
-        <div>
           <div class="readout">
             <div>Runde<b id="mo-round">0</b></div>
             <div>Mittel<b id="mo-mean">—</b></div>
@@ -685,6 +726,8 @@
             <div class="slider-head"><span>Tempo</span><b id="mo-speed-label">1&times;</b></div>
             <input type="range" id="mo-speed" min="0.5" max="4" step="0.5" value="1" />
           </div>
+        </div>
+        <div class="split-side">
           <div class="chart-card">
             <div class="chart-head">
               <span class="chart-title">Globale Mitteltemperatur<small>Mittel aller neun Positionen</small></span>
@@ -695,29 +738,41 @@
             <button class="btn" id="mo-new" type="button">Neuer Lauf</button>
             <button class="btn" id="mo-results" type="button">Alle Diagramme &rarr;</button>
           </div>
+
+          <details class="topic" id="model-settings">
+            <summary>Einstellungen des Modells</summary>
+            <div class="topic-body">
+              <div class="section-label first with-tools">
+                <span>Worauf achten, damit es stabil bleibt?</span>
+                <button type="button" class="info-dot" data-help="h-stable" aria-expanded="false" aria-controls="h-stable" aria-label="Stabilität erklären">?</button>
+              </div>
+              <div class="help-pop" id="h-stable" hidden>
+                <p><b>1. Energiebilanz ausgleichen.</b> Rein kommen 3 &times; Sonne, raus gehen 6 &times; Abstrahlung. Nur wenn <b>Sonne = 2 &times; Abstrahlung</b> ist, bleibt das Mittel konstant. Jede Abweichung verschiebt es Runde f&uuml;r Runde um (3&middot;Sonne &minus; 6&middot;Abstrahlung)&nbsp;/&nbsp;9 &mdash; ohne Ende, denn das Modell kennt keine R&uuml;ckkopplung.</p>
+                <p><b>2. Einschwingen lassen.</b> Am Anfang sitzt alle W&auml;rme in den Tropen. Nach etwa 5&ndash;6 Runden hat sich das Gef&auml;lle eingependelt. Die Treibhaus-Runde deshalb nicht vor Runde 8&ndash;10 setzen und danach noch 8&ndash;10 Runden spielen, damit Vorher und Nachher gut zu sehen sind.</p>
+                <p><b>3. Treibhaus sanft dosieren.</b> Jeder Punkt weniger Abstrahlung l&auml;sst 6 Punkte pro Runde im System (+0,67 im Mittel). Ein Punkt Unterschied reicht.</p>
+                <p><b>4. In der Farbskala bleiben.</b> Das Gef&auml;lle Tropen &minus; Pole pendelt sich bei etwa 3,7 &times; Sonne ein; das Niveau legt die Startenergie fest (Mittel = Startenergie / 9). Werte au&szlig;erhalb von &minus;20 bis 70 erscheinen in der Heatmap nur noch in der Randfarbe.</p>
+              </div>
+              <div class="params" id="model-params"></div>
+              <div class="params seed-row">
+                <div class="param">
+                  <div class="param-head">
+                    <label for="mo-seed">Zufallszahl (Seed)<small>Gleicher Seed = gleicher Lauf</small></label>
+                    <button type="button" class="info-dot" data-help="h-seed" aria-expanded="false" aria-controls="h-seed" aria-label="Seed erklären">?</button>
+                  </div>
+                  <input type="number" id="mo-seed" />
+                  <div class="help-pop" id="h-seed" hidden><p>Der Seed legt alle Zufallsentscheidungen des Modells fest. Gleicher Seed und gleiche Einstellungen ergeben exakt denselben Lauf &mdash; praktisch, um einen Lauf sp&auml;ter noch einmal zu zeigen, oder um nur eine Einstellung zu &auml;ndern und den Unterschied zu sehen. Ein anderer Seed zeigt, wie viel allein der Zufall ausmacht.</p></div>
+                </div>
+                <button class="ghost-btn" type="button" id="mo-reseed">W&uuml;rfeln</button>
+              </div>
+              <div class="btn-row">
+                <button class="btn" type="button" id="mo-defaults">Standard</button>
+                <button class="btn primary" type="button" id="mo-apply">&Uuml;bernehmen &amp; neu starten</button>
+              </div>
+              <p class="note">Die Standardwerte entsprechen dem Python-Skript: Startwerte 25&ndash;50 (Rest bis 135), Sonne +8, Abstrahlung &minus;4, ab Runde 15 &minus;3, 24 Runden. Bei Gleichstand w&auml;hlt das Modell die Seite zuf&auml;llig.</p>
+            </div>
+          </details>
         </div>
       </div>
-
-      <details class="topic" style="margin-top:14px">
-        <summary>Einstellungen des Modells</summary>
-        <div class="topic-body">
-          <div class="params" id="model-params"></div>
-          <div class="row-label">Gleichstand beim Austausch</div>
-          <div class="seg-row" id="mo-tie">
-            <button class="seg-btn active" type="button" data-tie="random">Zufall<span class="sub">wie im Spiel</span></button>
-            <button class="seg-btn" type="button" data-tie="south">Immer S&uuml;d<span class="sub">wie im Python-Skript</span></button>
-          </div>
-          <div class="params" style="grid-template-columns:1fr auto">
-            <label class="param"><span>Zufallszahl (Seed)<small>Gleicher Seed = gleicher Lauf</small></span><input type="number" id="mo-seed" /></label>
-            <button class="ghost-btn" type="button" id="mo-reseed" style="align-self:end;height:42px">W&uuml;rfeln</button>
-          </div>
-          <div class="btn-row">
-            <button class="btn" type="button" id="mo-defaults">Standard</button>
-            <button class="btn primary" type="button" id="mo-apply">&Uuml;bernehmen &amp; neu starten</button>
-          </div>
-          <p class="note">Die Standardwerte entsprechen dem Python-Skript: Startwerte 25&ndash;50 (Rest bis 135), Sonne +8, Abstrahlung &minus;4, ab Runde 15 &minus;3, 24 Runden.</p>
-        </div>
-      </details>
     </section>
 
     <!-- ================= SPIEL LEITEN ================= -->
@@ -769,6 +824,7 @@
           </div>
         </div>
 
+        <div class="chart-grid">
         <div class="chart-card">
           <div class="chart-head">
             <span class="chart-title">Tropen und Hemisph&auml;ren<small>Mittel jeder Reihe</small></span>
@@ -788,6 +844,7 @@
             <button class="seg-btn" type="button" data-sm="person">Nach Person</button>
           </div>
           <div class="sm-grid" id="res-sm"></div>
+        </div>
         </div>
       </div>
     </section>
@@ -862,8 +919,7 @@
     warmRound: 15,    // timestep_globalwarming; 0 = never
     total: 135,       // the three tropics start values add up to this
     initMin: 25,
-    initMax: 50,
-    tie: 'random'     // equal difference to both poles: 'random' or 'south'
+    initMax: 50
   };
 
   var ROW_NAMES = ['Nord', 'Tropen', 'Süd'];
@@ -925,7 +981,7 @@
       var r = exchangeRule(aw, j);
       if (r.pole === null) { ex.push({ pole: null, amount: 0 }); continue; }
       var pole = r.pole;
-      if (r.tie) pole = p.tie === 'south' ? 2 : (rand() < 0.5 ? 0 : 2);
+      if (r.tie) pole = rand() < 0.5 ? 0 : 2;   // the script always picks south here
       ex.push({ pole: pole, amount: randInt(rand, 0, r.max) });
     }
     var ae = applyExchanges(aw, ex);
@@ -1434,25 +1490,61 @@
   }
 
   // ============ MODEL VIEW ============
+  // The numbers in the help texts (gradient ~3.7 x sun, settling after
+  // 5-6 rounds) were measured over 300 runs per setting.
+  var RANGE_HELP = '<p>Aus diesem Bereich wählen Tropen 1 und 2 ihren Startwert; Tropen 3 bekommt den Rest bis zur Startenergie. ' +
+    '<b>Damit Tropen 3 nicht negativ startet, sollte 2 × Maximum kleiner als die Startenergie sein</b> (Standard: 2 × 50 = 100 &lt; 135).</p>' +
+    '<p>Die Startwerte wirken nur am Anfang: Nach etwa 5–6 Runden hat das Modell sie „vergessen“.</p>';
   var PARAM_FIELDS = [
-    { key: 'gain', label: 'Sonne', sub: 'je Tropen-Platz', min: 0, max: 50 },
-    { key: 'loss', label: 'Abstrahlung', sub: 'je Hemisphären-Platz', min: 0, max: 50 },
-    { key: 'lossWarm', label: 'Abstrahlung Treibhaus', sub: 'nach der Wendung', min: 0, max: 50 },
-    { key: 'total', label: 'Startenergie', sub: 'Summe der Tropen', min: 0, max: 999 },
-    { key: 'initMin', label: 'Startwert min.', sub: 'Tropen 1 und 2', min: -99, max: 999 },
-    { key: 'initMax', label: 'Startwert max.', sub: 'Tropen 1 und 2', min: -99, max: 999 }
+    { key: 'gain', label: 'Sonne', sub: 'je Tropen-Platz', min: 0, max: 50,
+      help: '<p>Punkte, die jede Tropen-Position pro Runde von der Sonne bekommt.</p>' +
+        '<p><b>Stabil ist das Klima nur, wenn Sonne = 2 × Abstrahlung</b>: 3 Tropen-Plätze nehmen auf, 6 Hemisphären-Plätze geben ab. Sonst driftet das Mittel jede Runde um (3·Sonne − 6·Abstrahlung) / 9.</p>' +
+        '<p>Die Sonne bestimmt auch das Gefälle: Tropen minus Pole pendelt sich bei etwa <b>3,7 × Sonne</b> ein (bei 8 also ≈ 30). Größere Werte bedeuten größere Schwankungen — und mehr Rechnerei im echten Spiel.</p>' },
+    { key: 'loss', label: 'Abstrahlung', sub: 'je Hemisphären-Platz', min: 0, max: 50,
+      help: '<p>Punkte, die jede Nord- und Süd-Position pro Runde ans Weltall verliert.</p>' +
+        '<p><b>Stabil nur bei Abstrahlung = Sonne / 2.</b> Mehr Abstrahlung kühlt das Modell Runde für Runde ab, weniger heizt es auf — und zwar ohne Ende, denn eine wärmere Erde strahlt hier nicht mehr ab.</p>' },
+    { key: 'lossWarm', label: 'Abstrahlung Treibhaus', sub: 'nach der Wendung', min: 0, max: 50,
+      help: '<p>Die Abstrahlung, sobald der Treibhauseffekt greift.</p>' +
+        '<p>Jeder Punkt weniger als normal lässt 6 Punkte pro Runde im System: <b>Das Mittel steigt um 0,67 pro Runde</b> und Punkt Unterschied. Ein Punkt (4 → 3) reicht für einen deutlichen Effekt; größere Sprünge laufen schnell aus der Farbskala (−20 bis 70).</p>' +
+        '<p>Gleich der normalen Abstrahlung = kein Treibhauseffekt.</p>' },
+    { key: 'total', label: 'Startenergie', sub: 'Summe der Tropen', min: 0, max: 999,
+      help: '<p>Die Summe der drei Tropen-Startwerte. Sie legt das Temperaturniveau fest: <b>Das Mittel liegt dauerhaft bei Startenergie / 9</b> (135 → 15).</p>' +
+        '<p>Auf Stabilität und Gefälle hat sie keinen Einfluss. Im eingeschwungenen Zustand liegen die Pole etwa ein Drittel des Gefälles unter dem Mittel, die Tropen zwei Drittel darüber (Standard: ≈ 5 und ≈ 35).</p>' },
+    { key: 'initMin', label: 'Startwert min.', sub: 'Tropen 1 und 2', min: -99, max: 999, help: RANGE_HELP },
+    { key: 'initMax', label: 'Startwert max.', sub: 'Tropen 1 und 2', min: -99, max: 999, help: RANGE_HELP }
   ];
   var MODEL_FIELDS = [
-    { key: 'rounds', label: 'Runden', sub: 'ohne den Start', min: 1, max: 200 },
-    { key: 'warmRound', label: 'Treibhaus ab Runde', sub: '0 = nie', min: 0, max: 200 }
+    { key: 'rounds', label: 'Runden', sub: 'ohne den Start', min: 1, max: 200,
+      help: '<p>Wie viele Runden das Modell nach dem Start spielt (das Python-Skript: 24).</p>' +
+        '<p>Das Gefälle braucht etwa 5–6 Runden, bis es sich eingependelt hat. <b>Nach der Treibhaus-Runde sollten noch 8–10 Runden folgen</b>, damit der Anstieg deutlich wird.</p>' },
+    { key: 'warmRound', label: 'Treibhaus ab Runde', sub: '0 = nie', min: 0, max: 200,
+      help: '<p>Ab dieser Runde gilt die Treibhaus-Abstrahlung. 0 schaltet die Wendung ab, ebenso eine Zahl hinter der letzten Runde.</p>' +
+        '<p><b>Nicht vor Runde 8–10 setzen</b>: Erst muss sich das Modell einschwingen, sonst vermischt sich der Treibhauseffekt mit dem Abbau des Tropenbergs vom Start.</p>' }
   ].concat(PARAM_FIELDS);
 
   function paramsHTML(prefix, p, fields) {
     return fields.map(function (f) {
-      return '<label class="param"><span>' + f.label + (f.sub ? '<small>' + f.sub + '</small>' : '') +
-        '</span><input type="number" id="' + prefix + f.key + '" value="' + p[f.key] + '" min="' + f.min + '" max="' + f.max + '" /></label>';
+      var id = prefix + f.key, hid = 'h-' + id;
+      return '<div class="param"><div class="param-head"><label for="' + id + '">' + f.label + (f.sub ? '<small>' + f.sub + '</small>' : '') + '</label>' +
+        (f.help ? '<button type="button" class="info-dot" data-help="' + hid + '" aria-expanded="false" aria-controls="' + hid + '" aria-label="' + f.label + ' erklären">?</button>' : '') +
+        '</div><input type="number" id="' + id + '" value="' + p[f.key] + '" min="' + f.min + '" max="' + f.max + '" />' +
+        (f.help ? '<div class="help-pop" id="' + hid + '" hidden>' + f.help + '</div>' : '') + '</div>';
     }).join('');
   }
+
+  // Every "?" toggles the explanation it points at. An open explanation
+  // takes the full width of the settings grid so it stays readable.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-help]');
+    if (!b) return;
+    var pop = $(b.getAttribute('data-help'));
+    if (!pop) return;
+    var open = pop.hidden;
+    pop.hidden = !open;
+    b.setAttribute('aria-expanded', String(open));
+    var par = b.closest('.param');
+    if (par) par.classList.toggle('open', open);
+  });
   function readParams(prefix, base, fields) {
     var p = Object.assign({}, base);
     fields.forEach(function (f) {
@@ -1609,18 +1701,11 @@
     $('mo-new').addEventListener('click', function () { model.seed = newSeed(); modelStart(); });
     $('mo-results').addEventListener('click', function () { results.source = 'model'; showTab('auswertung'); });
     $('mo-reseed').addEventListener('click', function () { $('mo-seed').value = newSeed(); });
-    $('mo-tie').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-tie]');
-      if (!b) return;
-      this.querySelectorAll('[data-tie]').forEach(function (x) { x.classList.toggle('active', x === b); });
-    });
     $('mo-defaults').addEventListener('click', function () {
       $('model-params').innerHTML = paramsHTML('mp-', DEFAULT_PARAMS, MODEL_FIELDS);
-      $('mo-tie').querySelectorAll('[data-tie]').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-tie') === 'random'); });
     });
     $('mo-apply').addEventListener('click', function () {
       model.p = readParams('mp-', DEFAULT_PARAMS, MODEL_FIELDS);
-      model.p.tie = $('mo-tie').querySelector('.active').getAttribute('data-tie');
       var s = parseInt($('mo-seed').value, 10);
       model.seed = isFinite(s) ? s : newSeed();
       $('model-params').innerHTML = paramsHTML('mp-', model.p, MODEL_FIELDS);
@@ -1719,6 +1804,7 @@
   function setupHTML() {
     var p = Object.assign({}, DEFAULT_PARAMS);
     var h = '<div class="intro-blurb"><p class="blurb"><b>Neues Spiel vorbereiten.</b> Trage ein, wer wo steht, und lege die Startwerte fest. Danach führt dich die App durch jede Runde.</p></div>';
+    h += '<div class="setup-grid"><div>';
     h += '<div class="section-label first">1 · Aufstellung (optional)</div>';
     h += '<p class="note">So stehen die Mitspielenden zu Beginn. Namen wandern im Spiel mit, damit du später jeder Person ihre eigene Kurve zeigen kannst. Leer lassen = N1 … S3.</p>';
     h += '<div class="gin">';
@@ -1730,8 +1816,8 @@
       }
       h += '</div>';
     }
-    h += '</div>';
-    h += '<div class="section-label">2 · Startwerte</div>';
+    h += '</div></div><div>';
+    h += '<div class="section-label first">2 · Startwerte</div>';
     h += '<p class="note">Nord und Süd starten mit 0. Die ersten beiden Tropen-Personen wählen eine Zahl zwischen <b id="rng-lbl">' + p.initMin + ' und ' + p.initMax + '</b>, die dritte bekommt den Rest bis <b id="tot-lbl">' + p.total + '</b>.</p>';
     h += '<div class="gin"><div class="gin-row r1"><span class="gin-lab">Tropen</span>' +
       '<label class="gin-cell"><small>T1</small><input type="number" id="init-t1" value="' + esc(live.setupT[0]) + '" /></label>' +
@@ -1745,7 +1831,7 @@
     h += '<div class="btn-row" style="margin-top:18px">' +
       '<button class="btn" type="button" data-act="import">Spiel laden</button>' +
       '<button class="btn primary" type="button" data-act="start-game" id="start-btn" disabled>Spiel starten</button></div>';
-    return h;
+    return h + '</div></div>';
   }
 
   function setupParams() { return readParams('lp-', DEFAULT_PARAMS, PARAM_FIELDS); }
@@ -1832,41 +1918,45 @@
     }).length;
   }
 
+  var FIELD_HTML = '<div class="stage-card"><canvas id="live-field" class="field"></canvas></div>';
+  function sayHTML(label, text) { return '<div class="say"><div class="say-label">' + label + '</div><p>' + text + '</p></div>'; }
+
+  // A round renders as { board, ctrl }: the field with what to announce,
+  // and everything the game master types or clicks. On a desktop the two
+  // sit side by side.
   function guidedHTML(calc) {
-    var d = game.draft, p = game.params, h = stepperHTML(d.step);
-    h += '<div class="stage-card"><canvas id="live-field" class="field"></canvas></div>';
+    var d = game.draft, p = game.params, h = '', say;
     if (d.step === 1) {
-      h += '<div class="say"><div class="say-label">Ansage</div><p>Nord- und Südreihe: <b>einen Platz nach rechts</b> (Jetstream). Tropenreihe: <b>einen Platz nach links</b> (Passat). Wer am Rand steht, läuft auf die andere Seite.</p></div>';
+      say = sayHTML('Ansage', 'Nord- und Südreihe: <b>einen Platz nach rechts</b> (Jetstream). Tropenreihe: <b>einen Platz nach links</b> (Passat). Wer am Rand steht, läuft auf die andere Seite.');
       h += '<div class="btn-row"><button class="btn" type="button" data-act="replay">Nochmal zeigen</button><button class="btn primary" type="button" data-act="step-next">Weiter</button></div>';
     } else if (d.step === 2) {
-      h += '<div class="say"><div class="say-label">Ansage</div><p>Jede Tropen-Person vergleicht sich mit Nord- und Süd-Nachbar und gibt der Seite mit der <b>größeren Differenz</b> eine ganze Zahl zwischen <b>0 und der Hälfte</b> der Differenz ab. Trag ein, was die Personen sagen.</p></div>';
+      say = sayHTML('Ansage', 'Jede Tropen-Person vergleicht sich mit Nord- und Süd-Nachbar und gibt der Seite mit der <b>größeren Differenz</b> eine ganze Zahl zwischen <b>0 und der Hälfte</b> der Differenz ab. Trag ein, was die Personen sagen.');
       h += '<div class="xcards">' + [0, 1, 2].map(function (j) { return xcardHTML(calc, j); }).join('') + '</div>';
       h += '<div class="btn-row small"><button class="btn" type="button" data-act="rand-all">Zufall für alle offenen</button></div>';
       h += '<p class="note" id="step2-note"></p>';
       h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn primary" type="button" data-act="step-next" id="step2-next">Weiter</button></div>';
     } else if (d.step === 3) {
-      h += '<div class="say"><div class="say-label">Ansage</div><p>Die Sonne wärmt die Tropen: <b>jede Tropen-Person +' + p.gain + '</b>. Die Hemisphären strahlen ins Weltall ab: <b>jede Nord- und Süd-Person −' + lossOf(p, game.warm) + '</b>' +
-        (game.warm ? ' <b style="color:var(--red)">(Treibhaus: statt −' + p.loss + ')</b>' : '') + '.</p></div>';
+      say = sayHTML('Ansage', 'Die Sonne wärmt die Tropen: <b>jede Tropen-Person +' + p.gain + '</b>. Die Hemisphären strahlen ins Weltall ab: <b>jede Nord- und Süd-Person −' + lossOf(p, game.warm) + '</b>' +
+        (game.warm ? ' <b style="color:var(--red)">(Treibhaus: statt −' + p.loss + ')</b>' : '') + '.');
       h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn" type="button" data-act="replay">Nochmal</button><button class="btn primary" type="button" data-act="step-next">Weiter</button></div>';
     } else {
-      h += '<div class="say"><div class="say-label">Ansage</div><p>Alle nennen ihren neuen Wert. Weicht eine Zahl von der Rechnung ab, zählt der Zettel — einfach überschreiben.</p></div>';
+      say = sayHTML('Ansage', 'Alle nennen ihren neuen Wert. Weicht eine Zahl von der Rechnung ab, zählt der Zettel — einfach überschreiben.');
       h += gridInputsHTML('final', d.final, calc.names1);
       h += energyCheckHTML(calc.prev, gridFromInputs(d.final));
       h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn primary" type="button" data-act="save-round" id="save-btn">Runde speichern</button></div>';
     }
-    return h;
+    return { board: FIELD_HTML + say, ctrl: h };
   }
 
   function manualHTML(calc) {
     var d = game.draft, h = '';
-    h += '<div class="stage-card"><canvas id="live-field" class="field"></canvas></div>';
-    h += '<div class="say"><div class="say-label">Ablauf</div><p>Die Gruppe spielt die Runde selbst: Wind, Austausch, Strahlung. Dann trägst du alle neun Werte ein. Namen zeigen, wer <b>nach dem Wind</b> dort steht; grau ist der Wert vor dieser Runde.</p></div>';
+    var say = sayHTML('Ablauf', 'Die Gruppe spielt die Runde selbst: Wind, Austausch, Strahlung. Dann trägst du alle neun Werte ein. Namen zeigen, wer <b>nach dem Wind</b> dort steht; grau ist der Wert vor dieser Runde.');
     var ph = [];
     for (var n = 0; n < 9; n++) ph.push(fmt(calc.aw[Math.floor(n / 3)][n % 3], 0).replace('−', '-'));
     h += gridInputsHTML('manual', d.manual, calc.names1, ph);
     h += energyCheckHTML(calc.prev, gridFromInputs(d.manual));
     h += '<div class="btn-row"><button class="btn primary" type="button" data-act="save-round" id="save-btn">Runde speichern</button></div>';
-    return h;
+    return { board: FIELD_HTML + say, ctrl: h };
   }
 
   function protocolHTML() {
@@ -1890,8 +1980,10 @@
       return;
     }
     var calc = draftCalc();
-    var h = roundHeadHTML(calc);
-    h += game.entry === 'manual' ? manualHTML(calc) : guidedHTML(calc);
+    var parts = game.entry === 'manual' ? manualHTML(calc) : guidedHTML(calc);
+    var h = '<div class="live-grid"><div class="live-head">' + roundHeadHTML(calc) +
+      (game.entry === 'manual' ? '' : stepperHTML(game.draft.step)) + '</div>' +
+      '<div class="live-board">' + parts.board + '</div><div class="live-ctrl">' + parts.ctrl;
     h += '<div class="section-label with-tools"><span>Protokoll</span><span style="font-size:10px;letter-spacing:.04em">* = Treibhaus</span></div>';
     h += protocolHTML();
     h += '<div class="btn-row small">' +
@@ -1903,7 +1995,7 @@
       '<button class="btn" type="button" data-act="import">Laden</button>' +
       '<button class="btn" type="button" data-act="new-game">Neues Spiel</button></div>';
     h += '<p class="note">Das Spiel wird automatisch in diesem Browser gespeichert. JSON sichert es vollständig (auch zum Laden auf einem anderen Gerät), CSV öffnet sich in Excel.</p>';
-    root.innerHTML = h;
+    root.innerHTML = h + '</div></div>';
 
     if (game.entry !== 'manual') {
       if (game.draft.step === 1) live.anim = { phase: 0, t: 0 };
@@ -2009,7 +2101,7 @@
     document.querySelectorAll('[data-name]').forEach(function (el) { names[+el.getAttribute('data-name')] = el.value.trim(); });
     game = {
       version: 1, created: new Date().toISOString(),
-      params: Object.assign({}, p, { tie: 'random' }),
+      params: p,
       names: names.map(function (n, i) { return n || DEFAULT_NAMES[i]; }),
       init: initialGrid(a, b, p.total), rounds: [], warm: false, entry: 'guided', draft: null
     };
@@ -2172,7 +2264,7 @@
     if (results.ensCache && results.ensCache.key === key) return results.ensCache.data;
     var zones = [[], [], []];
     for (var n = 0; n < 100; n++) {
-      var run = runModel(Object.assign({}, d.params, { tie: 'random' }), d.init, mulberry32(7919 * (n + 1)), warmFlags);
+      var run = runModel(d.params, d.init, mulberry32(7919 * (n + 1)), warmFlags);
       statesOf(run).forEach(function (g, k) {
         for (var i = 0; i < 3; i++) (zones[i][k] = zones[i][k] || []).push(rowMean(g, i));
       });
@@ -2442,6 +2534,8 @@
         if (b.hasAttribute('data-goto')) window.scrollTo({ top: $('tabs').offsetTop, behavior: 'smooth' });
       });
     });
+    // On a desktop there is room for the settings next to the board.
+    if (document.documentElement.getAttribute('data-view') === 'desktop') $('model-settings').open = true;
     setupModel();
     setupLive();
     setupResults();

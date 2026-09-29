@@ -18,7 +18,7 @@ The app has four tabs:
   an animated field and moves through wind, exchange and radiation phase by
   phase. You can play it, step through it, or jump to the end. Every rule
   is a parameter (sun, radiation, greenhouse radiation and its start round,
-  start energy and range, number of rounds, tie rule), and a seed makes
+  start energy and range, number of rounds), and a seed makes
   every run repeatable.
 - **Spiel leiten**: tracks the live game. Setup takes the players' names
   (optional; names travel with the wind) and the tropics start values, which
@@ -58,7 +58,12 @@ match the script: start values 25–50 with the remainder to 135, 24 rounds
 after the start, and the greenhouse from round 15. The only deliberate
 difference is the tie rule. When the differences to both poles are equal,
 the script always picks south, while the app picks at random, as the rules
-say. The script's behaviour is still available as a setting.
+say. Every model setting has a (?) that explains it and what keeps the
+simulation stable. In short:
+
+- sun = 2 × radiation keeps the mean constant;
+- the tropics–pole gradient settles at about 3.7 × sun after 5–6 rounds;
+- the greenhouse round should come after that spin-up.
 
 Because the exchange conserves energy, the global mean is fully determined.
 It stays at 135 / 9 = 15 while the balance is even, and then rises by 6/9
@@ -70,7 +75,8 @@ it out.
   and no dependency beyond a Google Fonts stylesheet.
 - Design: SCAPE° corporate design (Archivo, thick ink borders, poster-hero
   layout), in the same style as the Galton board. It is mobile-first for the
-  game master's phone, with a desktop view that is detected automatically
-  and can also be toggled by hand.
+  game master's phone. The desktop view, detected automatically or toggled
+  by hand, uses the full width: the board stays in view on one side while
+  the inputs and settings sit next to it.
 
 Open `index.html` directly, or serve the folder with any static file server.
