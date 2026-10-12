@@ -72,9 +72,13 @@ contrast between weather and climate is the core lesson, and the app points
 it out.
 
 - Pure client-side canvas + JavaScript. There is no build step, no server
-  and no dependency beyond a Google Fonts stylesheet.
-- Design: SCAPE° corporate design (Archivo, thick ink borders, poster-hero
-  layout), in the same style as the Galton board. It is mobile-first for the
+  and no external dependency (no web fonts are loaded from the internet).
+- Design: SCAPE° corporate design, kept apart from the app in `theme/`
+  (`theme.css`: font, palette, roles, wordmark; `theme.js`: brand texts and
+  every colour of the field, charts and diagrams, including the coolwarm
+  temperature scale). To ship the game in another design, edit `theme/`
+  only — see `theme/README.md`.
+- Layout: in the same style as the Galton board. It is mobile-first for the
   game master's phone. The desktop view, detected automatically or toggled
   by hand, uses the full width: the board stays in view on one side while
   the inputs and settings sit next to it.

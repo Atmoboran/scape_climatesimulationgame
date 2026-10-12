@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>SCAPE° — Klimasimulationsspiel</title>
-<meta name="description" content="Das Klimasimulationsspiel von SCAPE°: neun Menschen spielen gemeinsam ein Klimamodell. Anleitung, Computermodell, Spielleitung und Auswertung in einer App." />
-<meta name="theme-color" content="#f2e2c0" />
+<title>Klimasimulationsspiel</title>
+<meta name="description" content="Das Klimasimulationsspiel: neun Menschen spielen gemeinsam ein Klimamodell. Anleitung, Computermodell, Spielleitung und Auswertung in einer App." />
 <script>
   (function () {
     var mode;
@@ -19,41 +18,18 @@
     document.documentElement.setAttribute("data-view", mode);
   })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme/theme.css">
 <style>
-  :root{
-    --ink:#111111;
-    --paper:#ffffff;
-    --muted:#5c5c5c;
-
-    /* SCAPE° palette, sampled from the corporate identity guide */
-    --olive:#6b6b23;
-    --mustard:#d2a716;
-    --orange:#ef8f2c;
-    --rust:#c65a2a;
-    --red:#df2a1e;
-    --purple:#4a2e83;
-    --green:#00954f;
-    --cyan:#1093c4;
-    --navy:#28348f;
-
-    --cream:#f2e2c0;
-    --pastel-yellow:#f6ea79;
-    --bright-yellow:#ffe400;
-    --pastel-blue:#cfe6f6;
-    --pastel-lavender:#dcd6f2;
-    --mint:#4ab48a;
-  }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
     margin:0; padding:0; min-height:100%;
     background:var(--paper);
     color:var(--ink);
-    font-family:'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    font-family:var(--font);
   }
   h1,h2,h3{font-family:inherit;}
+  b,strong{font-weight:var(--fw-medium);}
+  :focus-visible{outline:3px solid var(--focus); outline-offset:2px;}
   img,svg{max-width:100%;}
   [hidden]{ display:none !important; }
 
@@ -64,16 +40,9 @@
     display:flex; align-items:flex-end; justify-content:space-between;
     padding:22px 20px 14px;
   }
-  .wordmark .word{
-    display:block; font-size:26px; font-weight:800; letter-spacing:-.01em; line-height:1;
-  }
-  .wordmark .sub{
-    display:block; margin-top:4px; font-size:10px; font-weight:700;
-    letter-spacing:.14em; text-transform:uppercase;
-  }
   #view-toggle{
     border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-weight:800; font-size:9.5px; letter-spacing:.05em;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:11px; letter-spacing:.05em;
     text-transform:uppercase; padding:5px 8px; cursor:pointer; white-space:nowrap;
   }
   #view-toggle:active{ background:var(--ink); color:var(--paper); }
@@ -91,10 +60,10 @@
     grid-template-columns:repeat(10,1fr);
     grid-template-rows:1fr 1fr;
   }
-  .q-a{ grid-column:1/6; grid-row:1/2; background:var(--rust); }
-  .q-b{ grid-column:6/11; grid-row:1/2; background:var(--pastel-yellow); }
-  .q-c{ grid-column:1/8; grid-row:2/3; background:var(--pastel-blue); }
-  .q-d{ grid-column:8/11; grid-row:2/3; background:var(--navy); }
+  .q-a{ grid-column:1/6; grid-row:1/2; background:var(--c-rust); }
+  .q-b{ grid-column:6/11; grid-row:1/2; background:var(--c-yellow-pastel); }
+  .q-c{ grid-column:1/8; grid-row:2/3; background:var(--c-ice); }
+  .q-d{ grid-column:8/11; grid-row:2/3; background:var(--c-navy); }
   /* Sized to stay inside the yellow block, where black ink reads. */
   .arch{
     position:absolute; right:5%; top:6%;
@@ -108,11 +77,11 @@
     max-width:74%;
   }
   .poster-title{
-    margin:0 0 6px; font-weight:900; text-transform:uppercase;
+    margin:0 0 6px; font-weight:var(--fw-light); text-transform:uppercase;
     font-size:clamp(20px,7vw,30px); line-height:.98; letter-spacing:-.01em;
   }
   .poster-tagline{
-    margin:0; font-size:10px; font-weight:700; letter-spacing:.02em;
+    margin:0; font-size:11px; font-weight:var(--fw-medium); letter-spacing:.02em;
     line-height:1.35; text-transform:uppercase;
   }
 
@@ -125,7 +94,7 @@
   }
   .tab-btn{
     flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-weight:800; font-size:10.5px; text-transform:uppercase;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:11.5px; text-transform:uppercase;
     letter-spacing:.03em; padding:9px 2px; cursor:pointer; text-align:center; line-height:1.15;
   }
   .tab-btn.active{ background:var(--ink); color:var(--paper); }
@@ -134,7 +103,7 @@
 
   /* ============ SECTION LABELS ============ */
   .section-label{
-    font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.12em; text-transform:uppercase;
     margin:26px 0 12px;
   }
   .section-label.first{ margin-top:0; }
@@ -149,19 +118,19 @@
     list-style:none; cursor:pointer;
     display:flex; align-items:center; gap:10px; justify-content:space-between;
     padding:14px 0;
-    font-size:14px; font-weight:800; letter-spacing:-.01em;
+    font-size:14px; font-weight:var(--fw-medium); letter-spacing:-.01em;
   }
   details.topic > summary::-webkit-details-marker{ display:none; }
   details.topic > summary::after{
     content:"+";
     flex:none; width:22px; height:22px;
     border:2px solid var(--ink); border-radius:50%;
-    font-size:14px; font-weight:800; line-height:18px; text-align:center;
+    font-size:14px; font-weight:var(--fw-medium); line-height:18px; text-align:center;
   }
   details.topic[open] > summary::after{ content:"\2013"; background:var(--ink); color:var(--paper); }
-  details.topic > summary:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+  details.topic > summary:focus-visible{ outline:2px solid var(--c-navy); outline-offset:2px; }
   .topic-body{ padding:0 0 10px; }
-  .topic-body h3{ margin:20px 0 8px; font-size:14px; font-weight:800; letter-spacing:.02em; }
+  .topic-body h3{ margin:20px 0 8px; font-size:14px; font-weight:var(--fw-medium); letter-spacing:.02em; }
   p.blurb, .topic-body li{
     margin:0 0 14px; font-size:14.5px; line-height:1.6; color:var(--ink);
   }
@@ -172,12 +141,12 @@
   .note{ font-size:12.5px; line-height:1.5; margin:0 0 12px; }
 
   .figure{
-    border:2px solid var(--ink); background:var(--cream);
+    border:2px solid var(--ink); background:var(--c-cream);
     padding:12px 12px 8px; margin:0 0 14px;
   }
   .figure svg{ display:block; width:100%; height:auto; }
-  .figure figcaption{ margin-top:8px; font-size:11px; font-weight:600; line-height:1.45; }
-  .figure figcaption b{ font-weight:800; }
+  .figure figcaption{ margin-top:8px; font-size:11px; font-weight:var(--fw-medium); line-height:1.45; }
+  .figure figcaption b{ font-weight:var(--fw-medium); }
 
   /* "How to use the app" cards on the instructions page */
   .howto{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 22px; }
@@ -185,43 +154,43 @@
     text-align:left; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
     font-family:inherit; padding:11px 11px 12px; cursor:pointer;
   }
-  .howto button b{ display:block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
+  .howto button b{ display:block; font-size:12px; font-weight:var(--fw-medium); text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
   .howto button span{ display:block; font-size:11.5px; line-height:1.4; }
-  .howto button:nth-child(1){ background:var(--pastel-yellow); }
-  .howto button:nth-child(2){ background:var(--pastel-blue); }
-  .howto button:nth-child(3){ background:var(--cream); }
-  .howto button:nth-child(4){ background:var(--pastel-lavender); }
+  .howto button:nth-child(1){ background:var(--c-yellow-pastel); }
+  .howto button:nth-child(2){ background:var(--c-ice); }
+  .howto button:nth-child(3){ background:var(--c-cream); }
+  .howto button:nth-child(4){ background:var(--c-lavender); }
 
   /* ============ SEGMENTED CONTROLS ============ */
   .seg-row{ display:flex; gap:8px; margin-bottom:10px; }
   .seg-btn{
     flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-weight:800; font-size:12px; text-transform:uppercase;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:12px; text-transform:uppercase;
     letter-spacing:.03em; padding:10px 6px; cursor:pointer; text-align:center;
   }
   .seg-btn.active{ background:var(--ink); color:var(--paper); }
-  .seg-btn.warm.active{ background:var(--red); border-color:var(--red); color:#fff; }
+  .seg-btn.warm.active{ background:var(--c-red); border-color:var(--c-red); color:var(--ink-inverse); }
   .seg-btn:disabled{ opacity:.4; cursor:default; }
   .seg-btn .sub{
-    display:block; font-size:9px; font-weight:600; text-transform:none;
+    display:block; font-size:11px; font-weight:var(--fw-medium); text-transform:none;
     letter-spacing:0; opacity:.75; margin-top:2px;
   }
   .row-label{
-    font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin:0 0 6px;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.1em; text-transform:uppercase; margin:0 0 6px;
   }
 
   /* ============ STAGE (the 3x3 field) ============ */
   .stage-card{
     margin:0 0 12px;
     border:2px solid var(--ink);
-    background:var(--cream);
+    background:var(--c-cream);
   }
   canvas.field{ display:block; width:100%; aspect-ratio:4/3; }
   .phase-caption{
     border-top:2px solid var(--ink); background:var(--paper);
     padding:9px 12px; font-size:12.5px; line-height:1.45; min-height:3.2em;
   }
-  .phase-caption b{ font-weight:800; }
+  .phase-caption b{ font-weight:var(--fw-medium); }
 
   /* ============ READOUT ============ */
   .readout{
@@ -230,16 +199,16 @@
   }
   .readout div{
     flex:1 1 0; min-width:0;
-    font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.06em; text-transform:uppercase;
     line-height:1.25;
   }
-  .readout b{ display:block; font-size:15px; font-weight:800; letter-spacing:0; margin-top:3px; text-transform:none; }
+  .readout b{ display:block; font-size:15px; font-weight:var(--fw-medium); letter-spacing:0; margin-top:3px; text-transform:none; }
 
   /* ============ SLIDER ============ */
   .slider-row{ margin-bottom:14px; }
   .slider-head{
     display:flex; justify-content:space-between; align-items:baseline;
-    font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.12em; text-transform:uppercase;
     margin-bottom:8px;
   }
   .slider-head b{ font-size:14px; letter-spacing:0; }
@@ -252,11 +221,11 @@
   input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none; appearance:none;
     width:22px; height:22px; margin-top:-10px;
-    background:var(--bright-yellow); border:2px solid var(--ink);
+    background:var(--c-yellow-bright); border:2px solid var(--ink);
   }
   input[type=range]::-moz-range-thumb{
     width:18px; height:18px; border-radius:0;
-    background:var(--bright-yellow); border:2px solid var(--ink);
+    background:var(--c-yellow-bright); border:2px solid var(--ink);
   }
 
   /* ============ BUTTONS ============ */
@@ -264,67 +233,67 @@
   .btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
     flex:1; min-width:0;
-    font-family:inherit; font-weight:800; font-size:13.5px; text-transform:uppercase; letter-spacing:.02em;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:13.5px; text-transform:uppercase; letter-spacing:.02em;
     padding:14px 8px; cursor:pointer;
     border:2px solid var(--ink);
     background:var(--paper); color:var(--ink);
   }
-  .btn.primary{ background:var(--bright-yellow); flex:1.5; }
+  .btn.primary{ background:var(--c-yellow-bright); flex:1.5; }
   .btn svg{ width:18px; height:18px; flex:none; }
   .btn:disabled{ opacity:.4; cursor:default; }
   .btn .sub{
-    display:block; font-size:10.5px; font-weight:600; text-transform:none; letter-spacing:0; opacity:.75; margin-top:1px;
+    display:block; font-size:11.5px; font-weight:var(--fw-medium); text-transform:none; letter-spacing:0; opacity:.75; margin-top:1px;
   }
-  .btn-row.small .btn{ font-size:10.5px; padding:10px 4px; }
+  .btn-row.small .btn{ font-size:11.5px; padding:10px 4px; }
   .ghost-btn, .mini-btn{
     border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:.05em;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:11.5px; letter-spacing:.05em;
     text-transform:uppercase; padding:7px 10px; cursor:pointer;
   }
-  .mini-btn{ font-size:9.5px; padding:4px 7px; }
+  .mini-btn{ font-size:11px; padding:4px 7px; }
   .ghost-btn:disabled{ opacity:.4; cursor:default; }
 
   /* ============ FORMS ============ */
   .params{ display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; margin:4px 0 12px; }
-  .param{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; }
-  .param small{ display:block; font-weight:500; font-size:10px; opacity:.75; }
+  .param{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:var(--fw-medium); }
+  .param small{ display:block; font-weight:var(--fw-medium); font-size:11px; opacity:.75; }
   input[type=number], input[type=text]{
-    font-family:inherit; font-size:16px; font-weight:700; color:var(--ink);
+    font-family:inherit; font-size:16px; font-weight:var(--fw-medium); color:var(--ink);
     border:2px solid var(--ink); background:var(--paper); padding:7px 8px; width:100%; border-radius:0;
   }
-  input[type=number]:focus, input[type=text]:focus{ outline:none; background:var(--pastel-yellow); }
-  input.bad{ background:#fbd9d3; }
-  input.changed{ background:var(--pastel-lavender); }
+  input[type=number]:focus, input[type=text]:focus{ outline:none; background:var(--c-yellow-pastel); }
+  input.bad{ background:var(--bad); }
+  input.changed{ background:var(--c-lavender); }
 
   /* 3x3 input grid, laid out like the players stand */
   .gin{ border:2px solid var(--ink); margin:0 0 12px; }
   .gin-row{ display:grid; grid-template-columns:64px 1fr 1fr 1fr; }
   .gin-row + .gin-row{ border-top:2px solid var(--ink); }
-  .gin-row.r0, .gin-row.r2{ background:var(--pastel-blue); }
-  .gin-row.r1{ background:var(--pastel-yellow); }
+  .gin-row.r0, .gin-row.r2{ background:var(--c-ice); }
+  .gin-row.r1{ background:var(--c-yellow-pastel); }
   .gin-lab{
     display:flex; align-items:center; padding:0 8px;
-    font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.06em; text-transform:uppercase;
   }
   .gin-cell{ display:flex; flex-direction:column; gap:3px; padding:6px 5px; min-width:0; }
-  .gin-cell small{ font-size:10px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gin-cell small{ font-size:11px; font-weight:var(--fw-medium); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .gin-cell input{ padding:6px 5px; text-align:center; }
   .gin-cell output{
     display:block; border:2px dashed var(--ink); padding:7px 5px; text-align:center;
-    font-size:16px; font-weight:800; background:rgba(255,255,255,.6);
+    font-size:16px; font-weight:var(--fw-medium); background:rgba(255,255,255,.6);
   }
 
   .check{
     border:2px solid var(--ink); padding:9px 11px; margin:0 0 12px;
     font-size:12.5px; line-height:1.45; background:var(--paper);
   }
-  .check.ok{ background:#d7efe3; }
-  .check.bad{ background:#fbd9d3; }
-  .check b{ font-weight:800; }
+  .check.ok{ background:var(--ok); }
+  .check.bad{ background:var(--bad); }
+  .check b{ font-weight:var(--fw-medium); }
 
   /* "Ansage" -- what the game master reads out */
-  .say{ border:2px solid var(--ink); background:var(--pastel-yellow); padding:10px 12px; margin:0 0 12px; }
-  .say-label{ font-size:9.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px; }
+  .say{ border:2px solid var(--ink); background:var(--c-yellow-pastel); padding:10px 12px; margin:0 0 12px; }
+  .say-label{ font-size:11px; font-weight:var(--fw-medium); letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px; }
   .say p{ margin:0; font-size:13.5px; line-height:1.5; }
 
   /* ============ GUIDED ROUND ============ */
@@ -332,36 +301,36 @@
     display:flex; align-items:baseline; justify-content:space-between; gap:10px;
     margin:0 0 10px;
   }
-  .round-head h2{ margin:0; font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:-.01em; }
-  .round-head span{ font-size:11px; font-weight:700; }
+  .round-head h2{ margin:0; font-size:22px; font-weight:var(--fw-medium); text-transform:uppercase; letter-spacing:-.01em; }
+  .round-head span{ font-size:11px; font-weight:var(--fw-medium); }
   .stepper{ display:flex; gap:5px; margin:0 0 12px; }
   .step-chip{
     flex:1; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+    font-family:inherit; font-size:11px; font-weight:var(--fw-medium); text-transform:uppercase; letter-spacing:.03em;
     padding:6px 2px; cursor:pointer; text-align:center; line-height:1.2;
   }
   .step-chip b{ display:block; font-size:14px; }
-  .step-chip.done{ background:var(--cream); }
+  .step-chip.done{ background:var(--c-cream); }
   .step-chip.active{ background:var(--ink); color:var(--paper); }
   .step-chip:disabled{ opacity:.35; cursor:default; }
 
   .xcard{ border:2px solid var(--ink); padding:10px 11px; margin:0 0 10px; background:var(--paper); }
   .xhead{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:7px; }
-  .xhead span{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
-  .xhead b{ font-size:15px; font-weight:800; }
+  .xhead span{ font-size:11px; font-weight:var(--fw-medium); letter-spacing:.1em; text-transform:uppercase; }
+  .xhead b{ font-size:15px; font-weight:var(--fw-medium); }
   .xnb{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
-  .xnb div{ border:2px solid var(--ink); padding:6px 7px; font-size:12px; font-weight:700; background:var(--pastel-blue); }
-  .xnb div.hot{ outline:3px solid var(--rust); outline-offset:-5px; }
-  .xnb small{ display:block; font-weight:600; font-size:11px; margin-top:2px; }
+  .xnb div{ border:2px solid var(--ink); padding:6px 7px; font-size:12px; font-weight:var(--fw-medium); background:var(--c-ice); }
+  .xnb div.hot{ outline:3px solid var(--c-rust); outline-offset:-5px; }
+  .xnb small{ display:block; font-weight:var(--fw-medium); font-size:11px; margin-top:2px; }
   .xrule{ font-size:12px; line-height:1.45; margin:0 0 8px; }
   .amount-row{ display:flex; gap:6px; align-items:stretch; }
   .amount-row input{ flex:1; text-align:center; min-width:0; }
   .amount-row button{
     flex:none; min-width:42px; border:2px solid var(--ink); background:var(--paper);
-    font-family:inherit; font-weight:800; font-size:16px; cursor:pointer;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:16px; cursor:pointer;
   }
-  .amount-row button.rand{ font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:0 8px; background:var(--bright-yellow); }
-  .xwarn{ font-size:11.5px; font-weight:700; color:var(--red); margin-top:6px; min-height:0; }
+  .amount-row button.rand{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:0 8px; background:var(--c-yellow-bright); }
+  .xwarn{ font-size:11.5px; font-weight:var(--fw-medium); color:var(--c-red); margin-top:6px; min-height:0; }
   .xwarn:empty{ display:none; }
 
   /* ============ PROTOCOL ============ */
@@ -369,31 +338,31 @@
   table.protocol{ width:100%; border-collapse:collapse; font-size:12px; }
   table.protocol th{
     position:sticky; top:0; background:var(--ink); color:var(--paper);
-    font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:6px 5px; text-align:left;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.06em; text-transform:uppercase; padding:6px 5px; text-align:left;
   }
-  table.protocol td{ padding:6px 5px; border-top:1px solid #d9d4c7; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  table.protocol td.warm{ color:var(--red); font-weight:800; }
-  table.protocol tr.latest td{ background:var(--pastel-yellow); font-weight:700; }
+  table.protocol td{ padding:6px 5px; border-top:1px solid var(--rule-soft); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.protocol td.warm{ color:var(--c-red); font-weight:var(--fw-medium); }
+  table.protocol tr.latest td{ background:var(--c-yellow-pastel); font-weight:var(--fw-medium); }
 
   /* ============ CHARTS ============ */
   .chart-grid{ display:grid; grid-template-columns:1fr; gap:0 14px; }
   .chart-card{ border:2px solid var(--ink); background:var(--paper); padding:10px 10px 8px; margin:0 0 14px; }
   .chart-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
-  .chart-title{ font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
-  .chart-title small{ display:block; font-size:10px; font-weight:600; text-transform:none; letter-spacing:0; margin-top:2px; }
+  .chart-title{ font-size:12px; font-weight:var(--fw-medium); letter-spacing:.06em; text-transform:uppercase; }
+  .chart-title small{ display:block; font-size:11px; font-weight:var(--fw-medium); text-transform:none; letter-spacing:0; margin-top:2px; }
   canvas.chart{ display:block; width:100%; aspect-ratio:16/10; touch-action:pan-y; }
   canvas.chart.heat{ aspect-ratio:4/3; }
   canvas.chart.wide{ aspect-ratio:2/1; }
-  .chart-note{ margin:6px 0 0; font-size:11px; line-height:1.45; font-weight:500; }
-  .legend{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; font-weight:700; margin:0 0 4px; }
+  .chart-note{ margin:6px 0 0; font-size:11px; line-height:1.45; font-weight:var(--fw-medium); }
+  .legend{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; font-weight:var(--fw-medium); margin:0 0 4px; }
   .legend i{ display:inline-block; width:14px; height:3px; margin-right:5px; vertical-align:middle; }
   .legend i.band{ height:10px; opacity:.25; }
   .legend i.dash{ background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px) !important; }
-  .toggle{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; margin:6px 0 0; cursor:pointer; }
+  .toggle{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:var(--fw-medium); margin:6px 0 0; cursor:pointer; }
   .toggle input{ width:18px; height:18px; accent-color:var(--ink); }
   .sm-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
   .sm-cell{ border:1.5px solid var(--ink); padding:4px 4px 2px; min-width:0; }
-  .sm-cell .sm-title{ font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sm-cell .sm-title{ font-size:11px; font-weight:var(--fw-medium); letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sm-cell canvas{ display:block; width:100%; aspect-ratio:4/3; touch-action:pan-y; }
   .empty{
     border:2px dashed var(--ink); padding:22px 16px; text-align:center; font-size:13px; line-height:1.5; margin:0 0 14px;
@@ -401,18 +370,18 @@
 
   /* ============ HELP POP-UPS ============ */
   .param-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:6px; }
-  .param-head label{ font-size:11px; font-weight:700; }
+  .param-head label{ font-size:11px; font-weight:var(--fw-medium); }
   .param.open{ grid-column:1/-1; }
   .info-dot{
     flex:none; width:20px; height:20px; padding:0;
     border:2px solid var(--ink); background:var(--paper); color:var(--ink);
-    font-family:inherit; font-weight:800; font-size:12px; line-height:1;
+    font-family:inherit; font-weight:var(--fw-medium); font-size:12px; line-height:1;
     border-radius:50%; cursor:pointer;
   }
   .info-dot[aria-expanded="true"]{ background:var(--ink); color:var(--paper); }
   .help-pop{
-    border:2px solid var(--ink); background:var(--pastel-yellow);
-    padding:10px 12px; margin:4px 0 6px; font-weight:500;
+    border:2px solid var(--ink); background:var(--c-yellow-pastel);
+    padding:10px 12px; margin:4px 0 6px; font-weight:var(--fw-medium);
   }
   .help-pop p{ margin:0 0 8px; font-size:12.5px; line-height:1.5; }
   .help-pop p:last-child{ margin-bottom:0; }
@@ -433,7 +402,7 @@
   /* ============ FOOTER ============ */
   .brand-footer{
     padding:26px 20px 34px; border-top:2px solid var(--ink);
-    font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; line-height:1.6;
+    font-size:11px; font-weight:var(--fw-medium); letter-spacing:.04em; text-transform:uppercase; line-height:1.6;
   }
 
   /* ============ DESKTOP VIEW ============
@@ -443,7 +412,7 @@
   :root[data-view="desktop"] .topbar,
   :root[data-view="desktop"] .tabs,
   :root[data-view="desktop"] main{ padding-left:32px; padding-right:32px; }
-  :root[data-view="desktop"] .poster{ aspect-ratio:7/1; margin:0 32px 16px; }
+  :root[data-view="desktop"] .poster{ aspect-ratio:auto; height:130px; margin:0 32px 16px; }
   :root[data-view="desktop"] .arch{ width:6.5%; top:9%; }
   :root[data-view="desktop"] #view-anleitung{ max-width:980px; margin:0 auto; }
   :root[data-view="desktop"] .split,
@@ -456,7 +425,7 @@
   :root[data-view="desktop"] canvas.field{ max-height:calc(100vh - 290px); min-height:320px; }
   :root[data-view="desktop"] .setup-grid{ grid-template-columns:1fr 1fr; }
   :root[data-view="desktop"] .setup-grid > div + div{ margin-top:0; }
-  :root[data-view="desktop"] .poster-title{ font-size:clamp(26px,5vw,40px); }
+  :root[data-view="desktop"] .poster-title{ font-size:44px; }
   :root[data-view="desktop"] .poster-tagline{ font-size:11.5px; }
   :root[data-view="desktop"] .tab-btn{ font-size:12px; padding:10px 6px; }
   :root[data-view="desktop"] details.topic > summary{ font-size:16px; }
@@ -489,10 +458,7 @@
 
 <div class="wrap">
   <header class="topbar">
-    <div class="wordmark">
-      <span class="word">SCAPE°</span>
-      <span class="sub">Wetter, Klima, Mensch</span>
-    </div>
+    <span class="logo" data-brand="logo"></span>
     <button id="view-toggle" type="button"></button>
   </header>
 
@@ -565,32 +531,32 @@
             </ul>
             <figure class="figure">
               <svg viewBox="0 0 340 240" role="img" aria-label="Neun Personen im 3x3-Raster; Nord- und Südreihe bewegen sich nach rechts, die Tropenreihe nach links">
-                <rect x="78" y="10" width="252" height="70" fill="#cfe6f6"/>
-                <rect x="78" y="80" width="252" height="70" fill="#f6ea79"/>
-                <rect x="78" y="150" width="252" height="70" fill="#cfe6f6"/>
-                <rect x="78" y="10" width="252" height="210" fill="none" stroke="#111" stroke-width="2"/>
-                <line x1="78" y1="80" x2="330" y2="80" stroke="#111" stroke-width="2"/>
-                <line x1="78" y1="150" x2="330" y2="150" stroke="#111" stroke-width="2"/>
-                <g font-family="Archivo,Arial" font-weight="800" font-size="11" fill="#111">
+                <rect x="78" y="10" width="252" height="70" style="fill:var(--band-pole)"/>
+                <rect x="78" y="80" width="252" height="70" style="fill:var(--band-tropics)"/>
+                <rect x="78" y="150" width="252" height="70" style="fill:var(--band-pole)"/>
+                <rect x="78" y="10" width="252" height="210" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="78" y1="80" x2="330" y2="80" stroke="currentColor" stroke-width="2"/>
+                <line x1="78" y1="150" x2="330" y2="150" stroke="currentColor" stroke-width="2"/>
+                <g style="font-family:var(--font)" font-weight="500" font-size="11" fill="currentColor">
                   <text x="6" y="44">NORD</text><text x="6" y="114">TROPEN</text><text x="6" y="184">SÜD</text>
                 </g>
-                <g font-family="Archivo,Arial" font-weight="600" font-size="8.5" fill="#111">
+                <g style="font-family:var(--font)" font-weight="500" font-size="8.5" fill="currentColor">
                   <text x="6" y="57">Jetstream</text><text x="6" y="127">Passat</text><text x="6" y="197">Jetstream</text>
                 </g>
-                <g fill="#fff" stroke="#111" stroke-width="2.5">
+                <g style="fill:var(--paper)" stroke="currentColor" stroke-width="2.5">
                   <circle cx="120" cy="38" r="16"/><circle cx="204" cy="38" r="16"/><circle cx="288" cy="38" r="16"/>
                   <circle cx="120" cy="108" r="16"/><circle cx="204" cy="108" r="16"/><circle cx="288" cy="108" r="16"/>
                   <circle cx="120" cy="178" r="16"/><circle cx="204" cy="178" r="16"/><circle cx="288" cy="178" r="16"/>
                 </g>
-                <g font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111" text-anchor="middle">
+                <g style="font-family:var(--font)" font-weight="500" font-size="12" fill="currentColor" text-anchor="middle">
                   <text x="120" y="42">0</text><text x="204" y="42">0</text><text x="288" y="42">0</text>
                   <text x="120" y="112">40</text><text x="204" y="112">34</text><text x="288" y="112">61</text>
                   <text x="120" y="182">0</text><text x="204" y="182">0</text><text x="288" y="182">0</text>
                 </g>
                 <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M100,68 L308,68 M299,62 L308,68 L299,74" stroke="#28348f"/>
-                  <path d="M308,138 L100,138 M109,132 L100,138 L109,144" stroke="#c65a2a"/>
-                  <path d="M100,208 L308,208 M299,202 L308,208 L299,214" stroke="#28348f"/>
+                  <path d="M100,68 L308,68 M299,62 L308,68 L299,74" style="stroke:var(--zone-north)"/>
+                  <path d="M308,138 L100,138 M109,132 L100,138 L109,144" style="stroke:var(--zone-tropics)"/>
+                  <path d="M100,208 L308,208 M299,202 L308,208 L299,214" style="stroke:var(--zone-north)"/>
                 </g>
               </svg>
               <figcaption><b>Die Aufstellung.</b> Wer am rechten Rand steht und nach rechts muss, l&auml;uft auf den linken Platz &mdash; die Reihen sind wie ein Band um die Erde geschlossen.</figcaption>
@@ -609,31 +575,31 @@
             </ol>
             <figure class="figure">
               <svg viewBox="0 0 340 210" role="img" aria-label="Energiefluss in einer Spalte: Sonne heizt die Tropen, die Tropen geben Wärme an Nord oder Süd ab, Nord und Süd strahlen ins All ab">
-                <g stroke="#111" stroke-width="2">
-                  <rect x="130" y="12" width="80" height="50" fill="#cfe6f6"/>
-                  <rect x="130" y="80" width="80" height="50" fill="#f6ea79"/>
-                  <rect x="130" y="148" width="80" height="50" fill="#cfe6f6"/>
+                <g stroke="currentColor" stroke-width="2">
+                  <rect x="130" y="12" width="80" height="50" style="fill:var(--band-pole)"/>
+                  <rect x="130" y="80" width="80" height="50" style="fill:var(--band-tropics)"/>
+                  <rect x="130" y="148" width="80" height="50" style="fill:var(--band-pole)"/>
                 </g>
-                <g font-family="Archivo,Arial" font-weight="800" font-size="11" fill="#111" text-anchor="middle">
+                <g style="font-family:var(--font)" font-weight="500" font-size="11" fill="currentColor" text-anchor="middle">
                   <text x="170" y="41">NORD</text><text x="170" y="109">TROPEN</text><text x="170" y="177">SÜD</text>
                 </g>
-                <g fill="none" stroke="#c65a2a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <g fill="none" style="stroke:var(--zone-tropics)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M152,80 L152,66 M146,72 L152,65 L158,72"/>
                   <path d="M188,130 L188,144 M182,138 L188,145 L194,138"/>
                 </g>
-                <text x="218" y="76" font-family="Archivo,Arial" font-weight="700" font-size="9.5" fill="#111">0 … &#189; Differenz</text>
-                <text x="218" y="146" font-family="Archivo,Arial" font-weight="700" font-size="9.5" fill="#111">(oder hierhin)</text>
-                <circle cx="290" cy="105" r="13" fill="#ffe400" stroke="#111" stroke-width="2"/>
-                <path d="M274,105 L216,105 M225,99 L216,105 L225,111" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <text x="245" y="97" font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111" text-anchor="middle">+8</text>
-                <g fill="none" stroke="#28348f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <text x="218" y="76" style="font-family:var(--font)" font-weight="500" font-size="9.5" fill="currentColor">0 … &#189; Differenz</text>
+                <text x="218" y="146" style="font-family:var(--font)" font-weight="500" font-size="9.5" fill="currentColor">(oder hierhin)</text>
+                <circle cx="290" cy="105" r="13" style="fill:var(--c-yellow-bright);stroke:var(--ink)" stroke-width="2"/>
+                <path d="M274,105 L216,105 M225,99 L216,105 L225,111" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <text x="245" y="97" style="font-family:var(--font)" font-weight="500" font-size="12" fill="currentColor" text-anchor="middle">+8</text>
+                <g fill="none" style="stroke:var(--zone-north)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M128,37 C115,31 108,43 95,37 C84,32 78,40 66,37 M75,31 L66,37 L75,43"/>
                   <path d="M128,173 C115,167 108,179 95,173 C84,168 78,176 66,173 M75,167 L66,173 L75,179"/>
                 </g>
-                <g font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#111">
+                <g style="font-family:var(--font)" font-weight="500" font-size="12" fill="currentColor">
                   <text x="20" y="41">&minus;4</text><text x="20" y="177">&minus;4</text>
                 </g>
-                <text x="8" y="109" font-family="Archivo,Arial" font-weight="700" font-size="9" fill="#111">ins Weltall</text>
+                <text x="8" y="109" style="font-family:var(--font)" font-weight="500" font-size="9" fill="currentColor">ins Weltall</text>
               </svg>
               <figcaption><b>Die Energiebilanz einer Runde.</b> Rein kommen 3 &times; 8 = 24 Punkte, raus gehen 6 &times; 4 = 24 Punkte. Der Austausch verschiebt nur Punkte, er erzeugt keine.</figcaption>
             </figure>
@@ -851,10 +817,12 @@
   </main>
 
   <footer class="brand-footer">
-    Wetter, Klima, Wandel.<br>Wir erkl&auml;ren es. &mdash; SCAPE°
+    <span data-brand="claim"></span><br><span data-brand="name"></span>
   </footer>
 </div>
 
+<script src="theme/theme.js"></script>
+<script src="js/brand.js"></script>
 <script>
 (function () {
   'use strict';
@@ -1022,18 +990,19 @@
   }
 
   // ============ COLOURS ============
-  var INK = '#111111';
-  var MUTED = '#5c5c5c';
-  var GRID = '#e6e1d5';
-  var WARM = '#df2a1e';
-  var ZONE_COL = ['#28348f', '#c65a2a', '#00954f'];   // north, tropics, south
-  var BAND = ['#cfe6f6', '#f6ea79', '#cfe6f6'];
-  var FONT = "'Archivo','Helvetica Neue',Arial,sans-serif";
-  function font(w, s) { return w + ' ' + s + 'px ' + FONT; }
+  var GC = window.THEME.game;
+  var INK = GC.ink;
+  var MUTED = GC.muted;
+  var GRID = GC.grid;
+  var WARM = GC.warm;
+  var ZONE_COL = GC.zones;   // north, tropics, south
+  var BAND = GC.bands;
+  var FONT = window.THEME.font;
+  // the CD knows light, regular and medium: heavier weights become medium
+  function font(w, s) { return (w >= 600 ? 500 : w) + ' ' + s + 'px ' + FONT; }
 
   // matplotlib's coolwarm, sampled at nine points, on the script's -20..70.
-  var CW = [[59, 76, 192], [98, 130, 234], [141, 176, 254], [184, 208, 249], [221, 220, 220],
-            [245, 196, 173], [244, 154, 123], [222, 96, 76], [180, 4, 38]];
+  var CW = GC.coolwarm;
   var VMIN = -20, VMAX = 70;
   function coolwarm(v) {
     var t = Math.max(0, Math.min(1, (v - VMIN) / (VMAX - VMIN)));
@@ -1042,7 +1011,7 @@
     return [0, 1, 2].map(function (c) { return Math.round(a[c] + (b[c] - a[c]) * f); });
   }
   function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
-  function inkOn(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255 < 0.5 ? '#ffffff' : INK; }
+  function inkOn(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255 < 0.5 ? GC.paper : INK; }
 
   // ============ CANVAS ============
   function prep(canvas) {
@@ -1155,7 +1124,7 @@
     var y0 = yT + dir * s / 2, y1 = yP - dir * s / 2;
     var x = cx + s * 0.22;
     ctx.globalAlpha = a.alpha == null ? 1 : a.alpha;
-    ctx.strokeStyle = a.amount > 0 ? '#c65a2a' : MUTED;
+    ctx.strokeStyle = a.amount > 0 ? GC.wind : MUTED;
     ctx.lineWidth = a.amount > 0 ? 4 : 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -1167,7 +1136,7 @@
     ctx.lineTo(x + 6, y1 - dir * 7);
     ctx.stroke();
     var label = a.amount === '' || a.amount == null ? '?' : '+' + a.amount;
-    pill(ctx, x + 10, (y0 + y1) / 2, label, a.amount > 0 ? '#ffe400' : '#ffffff', INK, 11, 'left');
+    pill(ctx, x + 10, (y0 + y1) / 2, label, a.amount > 0 ? GC.sun : GC.paper, INK, 11, 'left');
     ctx.globalAlpha = 1;
   }
 
@@ -1177,8 +1146,8 @@
     for (var i = 0; i < 3; i++) {
       for (var j = 0; j < 3; j++) {
         var cx = G.x0 + (j + 0.5) * G.cw, cy = G.top + (i + 0.5) * G.ch;
-        if (i === 1) pill(ctx, cx + s / 2, cy - s / 2, '☀ +' + rad.gain, '#ffe400', INK, 11, 'center');
-        else pill(ctx, cx + s / 2, cy - s / 2, '−' + rad.loss, rad.warm ? WARM : '#28348f', '#ffffff', 11, 'center');
+        if (i === 1) pill(ctx, cx + s / 2, cy - s / 2, '☀ +' + rad.gain, GC.sun, INK, 11, 'center');
+        else pill(ctx, cx + s / 2, cy - s / 2, '−' + rad.loss, rad.warm ? WARM : GC.cool, GC.paper, 11, 'center');
       }
     }
     ctx.globalAlpha = 1;
@@ -1257,7 +1226,7 @@
     function X(i) { return pad.l + i / xMax * pw; }
     function Y(v) { return pad.t + (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin)) * ph; }
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = GC.paper;
     ctx.fillRect(0, 0, W, H);
 
     // recessive grid
@@ -1370,7 +1339,7 @@
       var rows = [[k === 0 ? 'Start' : 'Runde ' + k, null]];
       cfg.series.forEach(function (s) {
         if (k >= s.data.length) return;
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = GC.paper;
         ctx.strokeStyle = s.color;
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1426,7 +1395,7 @@
     var c = prep(canvas);
     if (!c) return;
     var ctx = c.ctx, W = c.W, H = c.H;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = GC.paper;
     ctx.fillRect(0, 0, W, H);
     var narrow = W < 420;
     var lab = narrow ? 54 : 104, cb = narrow ? 44 : 56, top = 26, bot = 22;
@@ -1937,7 +1906,7 @@
       h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn primary" type="button" data-act="step-next" id="step2-next">Weiter</button></div>';
     } else if (d.step === 3) {
       say = sayHTML('Ansage', 'Die Sonne wärmt die Tropen: <b>jede Tropen-Person +' + p.gain + '</b>. Die Hemisphären strahlen ins Weltall ab: <b>jede Nord- und Süd-Person −' + lossOf(p, game.warm) + '</b>' +
-        (game.warm ? ' <b style="color:var(--red)">(Treibhaus: statt −' + p.loss + ')</b>' : '') + '.');
+        (game.warm ? ' <b style="color:var(--c-red)">(Treibhaus: statt −' + p.loss + ')</b>' : '') + '.');
       h += '<div class="btn-row"><button class="btn" type="button" data-act="step-back">Zurück</button><button class="btn" type="button" data-act="replay">Nochmal</button><button class="btn primary" type="button" data-act="step-next">Weiter</button></div>';
     } else {
       say = sayHTML('Ansage', 'Alle nennen ihren neuen Wert. Weicht eine Zahl von der Rechnung ab, zählt der Zettel — einfach überschreiben.');
@@ -1984,7 +1953,7 @@
     var h = '<div class="live-grid"><div class="live-head">' + roundHeadHTML(calc) +
       (game.entry === 'manual' ? '' : stepperHTML(game.draft.step)) + '</div>' +
       '<div class="live-board">' + parts.board + '</div><div class="live-ctrl">' + parts.ctrl;
-    h += '<div class="section-label with-tools"><span>Protokoll</span><span style="font-size:10px;letter-spacing:.04em">* = Treibhaus</span></div>';
+    h += '<div class="section-label with-tools"><span>Protokoll</span><span style="font-size:11px;letter-spacing:.04em">* = Treibhaus</span></div>';
     h += protocolHTML();
     h += '<div class="btn-row small">' +
       '<button class="btn" type="button" data-act="undo"' + (game.rounds.length ? '' : ' disabled') + '>Runde zurück</button>' +
@@ -2319,8 +2288,8 @@
     if (results.source === 'game') {
       var exp = [means[0]];
       d.rounds.forEach(function (r, k) { exp.push(exp[k] + expectedDelta(d.params, r.warm) / 9); });
-      mSeries.unshift({ label: 'Bilanz', tip: 'Laut Energiebilanz', data: exp, color: '#8a8a8a', width: 2, dash: [5, 4] });
-      legend.push({ label: 'Laut Energiebilanz', color: '#8a8a8a', cls: 'dash' });
+      mSeries.unshift({ label: 'Bilanz', tip: 'Laut Energiebilanz', data: exp, color: GC.balance, width: 2, dash: [5, 4] });
+      legend.push({ label: 'Laut Energiebilanz', color: GC.balance, cls: 'dash' });
       var off = means.some(function (m, k) { return Math.abs(m - exp[k]) > 1e-9; });
       $('note-mean').textContent = off
         ? 'Wo die Linien auseinanderlaufen, hat sich jemand verrechnet — die Energiebilanz allein legt den Mittelwert fest.'
