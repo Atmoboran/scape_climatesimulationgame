@@ -1,86 +1,107 @@
 # SCAPE° — Klimasimulationsspiel
 
 A browser app for the game master of the SCAPE° climate simulation game.
-Nine people stand in a 3×3 grid: the top row is the northern hemisphere, the
-middle row the tropics, the bottom row the southern hemisphere. Each holds
-a number of "temperature points". Round by round, winds shift the rows, the
-tropics pass heat to the hemispheres, the sun heats and space cools, and
-at some point the greenhouse effect tips the energy balance. The rules
-come from `Climatesimulationgame.pdf`, and the model is a port of
+Nine people stand in a 3 × 3 grid: the top row is the northern hemisphere,
+the middle row the tropics, the bottom row the southern hemisphere. Each
+holds a number of "temperature points". Round by round, winds shift the
+rows, the tropics pass heat to the hemispheres, the sun heats and space
+cools, and at some point the greenhouse effect tips the energy balance. The
+rules come from `Climatesimulationgame.pdf`, and the model is a port of
 `klimasimulationsspiel.py`.
 
-The app has four tabs:
+The app has four parts, as numbered buttons in the header (hash routes
+`#anleitung`, `#modell`, `#spiel`, `#auswertung`):
 
-- **Anleitung**: the game itself, covering the goal, materials, the formation
-  (with a diagram), the four steps of a round, the greenhouse twist, what to
-  watch for, tips for the game master and discussion questions.
-- **Modell**: the game without humans. The computer plays all nine roles on
-  an animated field and moves through wind, exchange and radiation phase by
-  phase. You can play it, step through it, or jump to the end. Every rule
-  is a parameter (sun, radiation, greenhouse radiation and its start round,
-  start energy and range, number of rounds), and a seed makes
-  every run repeatable.
-- **Spiel leiten**: tracks the live game. Setup takes the players' names
-  (optional; names travel with the wind) and the tropics start values, which
-  can be typed in or rolled. Each round then has two entry modes, and you
-  can switch between them from one round to the next:
-  - *Geführt* walks the game master through the four steps. It animates the
-    wind, suggests for every tropics player which pole to give to and the
-    maximum allowed, and warns about rule breaks. It then applies the
-    radiation and asks the game master to confirm the nine values, which
-    can be overwritten when a player's paper says otherwise.
-  - *Nur Endwerte* asks only for the nine end-of-round values.
+1. **Anleitung** – the game itself in collapsible topics: goal, material and
+   formation (with a diagram), the four steps of a round (with an energy
+   diagram), the greenhouse twist, what to watch for, tips for the game
+   master and discussion questions.
+2. **Modell** – the game without humans. The computer plays all nine roles
+   on an animated field and moves through wind, exchange and radiation phase
+   by phase: play, step or jump to the end. Every rule is a setting (sun,
+   radiation, greenhouse radiation and its start round, start energy and
+   range, number of rounds), each with an "i" note on what keeps the model
+   stable; a seed makes every run repeatable. A Merke box states the key
+   insight (single values = weather, mean = energy balance = climate).
+3. **Spiel leiten** – tracks the live game. Setup takes the players' names
+   (optional; names travel with the wind) and the tropics start values,
+   typed in or rolled. Each round has two entry modes, switchable from one
+   round to the next:
+   - *Geführt* walks through the four steps (numbered stepper), animates the
+     wind, suggests the pole and the maximum for every tropics player, warns
+     about rule breaks, applies the radiation and asks for the nine values
+     (overwritable when a player's paper says otherwise);
+   - *Nur Endwerte* asks only for the nine end-of-round values.
 
-  Both modes run an **energy check**: the exchange only moves points around,
-  so the grid's sum must change by exactly `3·sun − 6·radiation`. The same
-  view has the greenhouse switch, a protocol table and undo. The game
-  autosaves to `localStorage`, and exports and imports as JSON (the full
-  game) or CSV (values by position and by person, for Excel).
-- **Auswertung**: all the plots from the Python script, for the live game or
-  the model run. They are the temperature field (the `imshow` heatmap, with
-  a round slider and playback), the global mean, and the 3×3 time series,
-  either by grid position as in the script or by person. The app adds two
-  more:
-  - the zonal means, with an optional band from 100 model runs that start
-    from the same state and use the same greenhouse rounds;
-  - the global mean drawn against what the energy balance predicts, which
-    makes any arithmetic slip visible.
+   Both run an **energy check**: the grid's sum must change by exactly
+   `3·sun − 6·radiation`. Greenhouse switch, protocol table, undo, autosave
+   to `localStorage`, JSON export/import (full game) and CSV export (by
+   position and by person, for Excel).
+4. **Auswertung** – all plots of the Python script for the live game or the
+   model run: the temperature field (heatmap with round slider and
+   playback), the global mean (against what the energy balance predicts),
+   the zonal means (optionally with a band from 100 model runs) and the 3 × 3
+   time series by position or by person. Crosshair tooltips, PNG download
+   and a projector view ("Beamer-Ansicht") that shows only the charts, full
+   screen.
 
-  Each chart has a crosshair tooltip and a PNG download, and a projector
-  view shows only the charts, full screen.
+The model follows the script step for step. The only deliberate difference
+is the tie rule: when the differences to both poles are equal, the script
+always picks south, the app picks at random, as the rules say. Because the
+exchange conserves energy, the global mean stays at 135 / 9 = 15 while the
+balance is even and then rises by 6/9 per round – the contrast between
+jumping single values (weather) and a predictable mean (climate) is the core
+lesson. Temperatures are coloured on the CD temperature scale (cold blue →
+grey → warm red) over the script's range −20 … 70.
 
-The model follows the script step for step. The hemispheres move right and
-the tropics left (`np.roll`). Each tropics position gives a random integer
-between 0 and `diff // 2` to the pole with the larger difference, and gives
-nothing if neither pole is colder. Then the tropics gain +8, and the
-hemispheres lose −4, or −3 once the greenhouse twist is on. The defaults
-match the script: start values 25–50 with the remainder to 135, 24 rounds
-after the start, and the greenhouse from round 15. The only deliberate
-difference is the tie rule. When the differences to both poles are equal,
-the script always picks south, while the app picks at random, as the rules
-say. Every model setting has a (?) that explains it and what keeps the
-simulation stable. In short:
+This is a staff tool: all game-master functions are visible; there is no
+hidden staff panel.
 
-- sun = 2 × radiation keeps the mean constant;
-- the tropics–pole gradient settles at about 3.7 × sun after 5–6 rounds;
-- the greenhouse round should come after that spin-up.
+## Run
 
-Because the exchange conserves energy, the global mean is fully determined.
-It stays at 135 / 9 = 15 while the balance is even, and then rises by 6/9
-per round. The individual positions, meanwhile, jump around at random: that
-contrast between weather and climate is the core lesson, and the app points
-it out.
+Open `index.html` (double-click works, no build, no server, works offline),
+or serve the folder with any static file server / GitHub Pages.
 
-- Pure client-side canvas + JavaScript. There is no build step, no server
-  and no external dependency (no web fonts are loaded from the internet).
-- Design: SCAPE° corporate design, kept apart from the app in `theme/`
-  (`theme.css`: font, palette, roles, wordmark; `theme.js`: brand texts and
-  every colour of the field, charts and diagrams, including the coolwarm
-  temperature scale). To ship the game in another design, edit `theme/`
-  only — see `theme/README.md`.
-- Layout: in the same style as the Galton board. It is mobile-first for the
-  game master's phone. The desktop view, detected automatically or toggled
-  by hand, uses the full width: the board stays in view on one side while
-  the inputs and settings sit next to it.
+URL switches:
 
-Open `index.html` directly, or serve the folder with any static file server.
+- `?kiosk` – exhibit mode: back to the start (Anleitung) after 3 minutes
+  without touch. The autosaved live game is kept.
+- `#modell`, `#spiel`, `#auswertung` – open a part directly.
+
+## Files
+
+```
+index.html          structure only (data-t placeholders for every text)
+css/kit.css         shared SCAPE° components (same in every app)
+css/app.css         layout of this app
+js/view.js          phone/desktop layout switch (loaded in <head>)
+js/texts.js         fills the texts from content/
+js/brand.js         fills logo and footer line from the theme
+js/kit.js           fullscreen button, hint badge, info notes, kiosk switch
+js/core.js          helpers and the model (window.KS)
+js/draw.js          canvas drawing: field, line charts, heatmap
+js/model-view.js    part 2 "Modell"
+js/live.js          part 3 "Spiel leiten"
+js/results.js       part 4 "Auswertung"
+js/app.js           parts navigation, animation loop, start-up
+content/texts.de.js every visible text (edit or translate here)
+theme/              the design: font, palette, logo, colours (see theme/README.md)
+klimasimulationsspiel.py, Climatesimulationgame.pdf   the original script and rules
+```
+
+## Layout
+
+Sticky header with the wordmark, the four part buttons and the
+"Desktop-/Handy-Ansicht" toggle (automatic from 1000 px, remembered for
+this app only). Poster header with kicker ("Teil 2 von 4 · Modell"); it
+shrinks to a slim band on parts 2–4. Phone: one column (round head, field,
+inputs). Desktop: the square field on the left, sized to the screen and
+sticky; all controls on the right. Every part ends with a "Weiter zu … →"
+button.
+
+## Adapting
+
+Design: `theme/` only (field, chart and diagram colours in `THEME.game`,
+temperature scale in `THEME.data` / `THEME.tempColor`). Texts:
+`content/texts.de.js` only. Founders Grotesk is used when installed,
+otherwise the system fallback.

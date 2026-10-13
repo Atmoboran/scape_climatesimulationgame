@@ -1,7 +1,7 @@
 /* =========================================================================
    THEME – everything that makes this app look like SCAPE°.
-   The app's own CSS only uses the custom properties defined here, so a
-   different institution changes this file (plus theme.js) and nothing else.
+   css/kit.css and css/app.css only use the custom properties defined here,
+   so another institution changes this file (plus theme.js) and nothing else.
 
    SCAPE° corporate design (Bureau Mitte), in short:
    * Founders Grotesk only. Headlines very large, light, in caps; labels
@@ -13,27 +13,11 @@
      vocabulary and may be used.
    ========================================================================= */
 
-/* Founders Grotesk (Klim Type Foundry) is commercial and not shipped.
-   With a web licence, drop the woff2 files into theme/fonts/ (see the
-   README there). A copy installed on the exhibit computer is used too. */
-@font-face {
-  font-family: "Founders Grotesk";
-  src: local("Founders Grotesk Light"), local("FoundersGrotesk-Light"),
-       url("fonts/FoundersGrotesk-Light.woff2") format("woff2");
-  font-weight: 300; font-display: swap;
-}
-@font-face {
-  font-family: "Founders Grotesk";
-  src: local("Founders Grotesk Regular"), local("FoundersGrotesk-Regular"),
-       url("fonts/FoundersGrotesk-Regular.woff2") format("woff2");
-  font-weight: 400; font-display: swap;
-}
-@font-face {
-  font-family: "Founders Grotesk";
-  src: local("Founders Grotesk Medium"), local("FoundersGrotesk-Medium"),
-       url("fonts/FoundersGrotesk-Medium.woff2") format("woff2");
-  font-weight: 500; font-display: swap;
-}
+/* Founders Grotesk (Klim Type Foundry) is commercial and not shipped. It is
+   used when installed on the device; otherwise the system fallback applies. */
+@font-face { font-family: "Founders Grotesk"; src: local("Founders Grotesk Light"), local("FoundersGrotesk-Light"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Founders Grotesk"; src: local("Founders Grotesk Regular"), local("FoundersGrotesk-Regular"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Founders Grotesk"; src: local("Founders Grotesk Medium"), local("FoundersGrotesk-Medium"); font-weight: 500; font-display: swap; }
 
 :root {
   /* ---- Type ------------------------------------------------------------ */
@@ -42,7 +26,6 @@
   --fw-regular: 400;    /* running text */
   --fw-medium: 500;     /* labels, buttons, small caps headings, emphasis */
   --caps: uppercase;    /* headlines and labels; "none" for a brand without caps */
-  --tracking-caps: .05em;
 
   /* ---- Palette (scape-corporate-design, section 4) --------------------- */
   --c-black: #000000;   --c-white: #FFFFFF;
@@ -67,22 +50,25 @@
   --paper: var(--c-white);        /* page background */
   --line: var(--c-black);         /* borders of buttons, cards, frames */
   --line-width: 2px;
-  --accent: var(--c-orange);      /* primary button, active highlight */
-  --accent-pale: var(--c-yellow-pastel); /* hover, tip cards */
-  --accent-ink: var(--c-black);   /* text on --accent */
-  --active: var(--c-black);       /* pressed toggle / selected tab */
+  --rule-soft: #d9d9d9;           /* grid lines and axes inside charts only */
+  --primary: var(--c-yellow-bright); /* THE main action button */
+  --primary-ink: var(--c-black);
+  --active: var(--c-black);       /* selected / switched-on state */
   --active-ink: var(--c-white);
+  --accent: var(--c-orange);      /* decoration of the current part */
+  --accent-pale: var(--c-yellow-pastel); /* hover */
+  --merke: var(--c-yellow-pale);  /* "Merke" box */
   --focus: var(--c-cyan);         /* keyboard focus ring */
-  --backdrop: rgba(0, 0, 0, .55); /* behind dialogs */
+  --stage-bg: var(--c-cream);     /* behind simulations */
 
-  /* Colour fields of the poster header (CD "Gestaltungsebene 1"):
-     a pastel, a strong tone, a pastel, a strong tone. */
-  --field-1: var(--c-yellow-pastel);
-  --field-2: var(--c-orange);
-  --field-3: var(--c-cream);
-  --field-4: var(--c-navy);
-  --shape: var(--c-green);        /* Ebene 2: small solid shape */
-  --outline: var(--c-pink);       /* Ebene 3: large cropped outline */
+  /* Poster header (CD "Gestaltungsebenen"): background field, two fields on
+     the right, a small solid shape and a large cropped outline. Each app
+     overrides these with its own signature combination. */
+  --f1: var(--c-yellow-pastel);
+  --f2: var(--c-orange);
+  --f3: var(--c-navy);
+  --shape: var(--c-green);
+  --outline: var(--c-pink);
 
   /* Footer */
   --foot-bg: var(--c-navy);
@@ -102,9 +88,21 @@
 
 /* ---- Klimasimulationsspiel ------------------------------------------------ */
 :root {
-  --ok: #D7EFE3;          /* energy check passed */
-  --bad: #FBD9D3;         /* energy check failed, invalid input */
-  --rule-soft: #D9D4C7;   /* table lines */
+  /* signature combination: lilac, pale yellow, orange; ice shape, navy outline */
+  --f1: var(--c-lilac); --f2: var(--c-yellow-pale); --f3: var(--c-orange);
+  --shape: var(--c-ice); --outline: var(--c-navy);
+  --stage-bg: var(--c-cream);          /* behind the field and the figures */
+  --ok: #D7EFE3;                       /* energy check passed */
+  --bad: #FBD9D3;                      /* energy check failed, invalid input */
+  --changed: var(--c-lavender);        /* a confirmed value that differs from the calculation */
+  --input-focus: var(--c-yellow-pastel);
+  --gin-out: rgba(255, 255, 255, .6);  /* calculated value inside the 3 × 3 input grid */
+  --say: var(--c-yellow-pastel);       /* what the game master reads out */
+  --latest: var(--c-yellow-pastel);    /* newest protocol row */
+  --step-done: var(--c-cream);         /* finished step in the round stepper */
+  --warm: var(--c-red);                /* greenhouse / warming */
+  --sun: var(--c-yellow-bright);       /* sun (+8) in the figures */
+  --hot: var(--c-rust);                /* suggested receiver of the exchange */
   --zone-north: var(--c-navy);   --zone-tropics: var(--c-rust);   --zone-south: var(--c-green-strong);
   --band-pole: var(--c-ice);     --band-tropics: var(--c-yellow-pastel);
 }

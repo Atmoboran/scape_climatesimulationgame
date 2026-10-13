@@ -9,8 +9,8 @@ window.THEME = {
       '<span class="logo-word">SCAPE°</span>' +
       '<span class="logo-sub" aria-hidden="true"><span>Wetter</span><span>Klima</span><span>Mensch</span></span>',
     logoLabel: 'SCAPE° – Wetter Klima Mensch',
-    claim: 'Wetter, Klima, Wandel. Wir erklären es.',
-    contactHtml: 'SCAPE°<br>Frankfurter Straße 39<br>63065 Offenbach am Main<br>Instagram: @scape_offenbach<br>scape@offenbach.de',
+    // The one line in every footer.
+    line: 'SCAPE° – Wetter. Klima. Mensch.',
     titleSuffix: ' – SCAPE°',
     themeColor: '#F2E4BA',
     // Short mark S° for the browser tab.
@@ -32,24 +32,39 @@ window.THEME = {
     greenStrong: '#00983A', green: '#62BA91', greenPale: '#B0D8C0', mint: '#CFE6CE', paleGreen: '#D0E8DC',
     cyan: '#0097BE', cyan2: '#44ABCC', cyan3: '#80C0DA', petrol: '#1F6C8E', teal: '#007B73', grey: '#AEC4C2',
     navy: '#28348B', blue: '#0253A0', blue2: '#3274BA', bluePale: '#98B8DD', ice: '#D4EDF8'
+  },
+
+  // Meaningful data colours, the same in every app (style guide 4.3).
+  data: {
+    cold: '#3274BA', neutral: '#D9D6CF', warm: '#E41513',   // temperature scale
+    low: '#E41513', high: '#3274BA',                        // T (Tief) red, H (Hoch) blue
+    pairA: '#E41513', pairB: '#28348B'                      // two things compared: red vs blue
   }
 };
 
+// Colour on the CD temperature scale: t = 0 (cold) … 0.5 (neutral) … 1 (warm).
+THEME.tempColor = function (t) {
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const [a, b] = t < 0.5 ? [hex(THEME.data.cold), hex(THEME.data.neutral)] : [hex(THEME.data.neutral), hex(THEME.data.warm)];
+  const f = Math.max(0, Math.min(1, t < 0.5 ? t * 2 : (t - 0.5) * 2));
+  return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',') + ')';
+};
+
 // ---- Klimasimulationsspiel: colours of the field, charts and diagrams ----
+// The temperature colours of the field and the heatmap come from the CD
+// temperature scale above (THEME.tempColor): cold blue → grey → warm red,
+// over the script's range of −20 … 70 points.
 THEME.game = {
   ink: '#000000',
   paper: '#FFFFFF',
   muted: '#5C5C5C',            // secondary labels, axes
   grid: '#E6E1D5',             // chart grid lines
+  tooltip: 'rgba(255,255,255,.96)',
   warm: '#E41513',             // greenhouse / warming
   sun: '#FFED00',              // sun gain pill
   cool: '#28348B',             // radiation loss pill
   wind: '#D55117',             // wind / exchange arrows
   balance: '#8A8A8A',          // "laut Energiebilanz" reference line
   zones: ['#28348B', '#D55117', '#00983A'],   // north, tropics, south
-  bands: ['#D4EDF8', '#FFF487', '#D4EDF8'],   // row backgrounds: north, tropics, south
-  // Temperature field: matplotlib's "coolwarm" (as in klimasimulationsspiel.py),
-  // sampled at nine points over −20…70 points. Replace with any diverging scale.
-  coolwarm: [[59, 76, 192], [98, 130, 234], [141, 176, 254], [184, 208, 249], [221, 220, 220],
-             [245, 196, 173], [244, 154, 123], [222, 96, 76], [180, 4, 38]]
+  bands: ['#D4EDF8', '#FFF487', '#D4EDF8']    // row backgrounds: north, tropics, south
 };
